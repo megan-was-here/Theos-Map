@@ -1,3 +1,4 @@
+.ico{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* Layout: one-screen app. Ink-on-paper map fills the top (left on wide screens); a spellbook panel below (right) holds quests, spots and spells. */
 :root{
   --paper:#fcfcfa;
@@ -176,3 +177,22 @@ textarea{min-height:92px;resize:vertical;font-family:var(--note);font-size:20px}
 .pick{display:flex;align-items:center;gap:8px;border:0;background:none;text-align:left;cursor:pointer;padding:4px;font-size:16px}
 .pick .dot{flex:none}
 .err{color:var(--ink);font-size:15px;border-left:4px solid var(--ink);padding-left:8px;margin:0}
+
+/* map layers */
+.parks path{fill:url(#parkdots);stroke:none}
+.beaches path{fill:url(#sand);stroke:none}
+.ferries path{fill:none;stroke:var(--ink);stroke-width:1.6px;stroke-dasharray:7 5;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.7}
+.ferrytag .ico{stroke:var(--ink);stroke-width:2;fill:var(--paper)}
+.area{paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+.area.sub{font-size:12px}
+.area.sub.big{font-size:16px}
+.area.nature{font-family:var(--note);text-transform:none;letter-spacing:.3px;font-size:14px;fill:var(--ink-soft)}
+.creature path{stroke-width:2}
+.landmark{pointer-events:none}
+.lm-art{fill:var(--paper);stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lm-label{font-family:var(--note);font-size:14px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+#map[data-zoom="1"] .t2,#map[data-zoom="1"] .t3,#map[data-zoom="2"] .t3,
+#map[data-zoom="1"] .area.nature,#map[data-zoom="1"] .lm-label,#map[data-zoom="1"] .ferrytag text{display:none}
+#map[data-zoom="1"] .landmark{opacity:.9}
+.compass{position:absolute;left:max(8px,env(safe-area-inset-left,0px));top:8px;width:54px;height:54px;pointer-events:none}
+.scalebar{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:12px;display:flex;align-items:flex-end;gap:6px;font-size:14px;line-height:1;pointer-events:none;background:var(--paper);padding:3px 6px;border-radius:8px}

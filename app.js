@@ -23,14 +23,34 @@ const CATS = {
   crystal:["Crystals","i-crystal"], book:["Books","i-book"], cinema:["Cinemas","i-cinema"], art:["Art","i-art"],
   market:["Markets","i-market"], ferry:["Ferry","i-ferry"], heart:["Other","i-heart"]
 };
-const AREAS = [
-  ["Manly",-33.7935,151.2905,1],["Mosman",-33.8290,151.2440,0],["Cremorne",-33.8340,151.2200,0],["North Sydney",-33.8395,151.2070,0],
-  ["City",-33.8700,151.2110,1],["The Rocks",-33.8570,151.2120,0],["Glebe",-33.8790,151.1860,0],["Newtown",-33.8980,151.1830,0],
-  ["Surry Hills",-33.8860,151.2120,0],["Bondi",-33.8920,151.2700,0],["Bronte",-33.9030,151.2610,0],["Coogee",-33.9220,151.2510,0],
-  ["Rozelle",-33.8590,151.1720,0],["St Peters",-33.9160,151.1780,0],["Paddington",-33.8850,151.2290,0]
-];
 const SEAS = [["Pacific Ocean",-33.8650,151.3040],["Sydney Harbour",-33.8505,151.2470],["Middle Harbour",-33.8100,151.2330]];
-const DECO = [["moon",-33.8420,151.3020,1.1],["star",-33.8800,151.3040,.8],["star",-33.8240,151.3090,.6],["star",-33.9150,151.3000,.7],["star",-33.8960,151.2950,.5]];
+const DECO = [["moon",-33.8420,151.3020,1.1],["star",-33.8800,151.3040,.8],["star",-33.8240,151.3090,.6],["star",-33.9150,151.3000,.7],["star",-33.8960,151.2950,.5],
+  ["octopus",-33.9230,151.2900,1.2],["whale",-33.8650,151.3080,1.3],["fish",-33.7880,151.3080,1]];
+const LAYERS = window.THEO_LAYERS || {parks:[],beaches:[],ferries:[],suburbs:[]};
+const NATURE = [["Royal Botanic Garden",-33.8642,151.2166],["Hyde Park",-33.8731,151.2111],["Centennial Park",-33.8980,151.2340],["Moore Park",-33.8935,151.2205],
+  ["Sydney Park",-33.9095,151.1840],["North Head",-33.8170,151.2950],["Callan Park",-33.8650,151.1520],["Bradleys Head",-33.8530,151.2470],
+  ["Manly Beach",-33.7935,151.2900],["Shelly Beach",-33.8000,151.2995],["Bondi Beach",-33.8908,151.2770],["Bronte Beach",-33.9035,151.2690],
+  ["Tamarama",-33.8990,151.2730],["Coogee Beach",-33.9205,151.2580],["Clovelly",-33.9135,151.2640],["Balmoral Beach",-33.8275,151.2520],
+  ["Camp Cove",-33.8395,151.2785],["Freshwater",-33.7805,151.2905]];
+const LANDMARKS = [
+  ["Harbour Bridge",-33.85212,151.21078,"bridge"],["Opera House",-33.85720,151.21512,"opera"],["Sydney Tower",-33.87050,151.20895,"tower"],
+  ["Luna Park",-33.84727,151.20980,"luna"],["Taronga Zoo",-33.84383,151.24137,"giraffe"],["Bondi Icebergs",-33.89505,151.27457,"icebergs"],
+  ["Macquarie Lighthouse",-33.85394,151.28519,"lighthouse"],["Fort Denison",-33.85494,151.22551,"fort"]];
+const LANDMARK_ART = {
+  bridge:"M-22-4h44M-20-4Q0-34 20-4M-14-4v-9M-7-4v-15M0-4v-17M7-4v-15M14-4v-9M-25-14h6v14h-6zM19-14h6v14h-6zM-22 0h44",
+  opera:"M-24 0h48M-20 0Q-14-26-4 0M-10 0Q2-34 12 0M4 0Q14-22 22 0M-22-3h46",
+  tower:"M0-40v8M-6-32h12l-3 6h-6zM-2-26l-2 26M2-26l2 26M-7 0h14M-3-14h6",
+  luna:"M-14-16a14 14 0 1 0 28 0a14 14 0 1 0-28 0M-6-20v-2M6-20v-2M-9-12q9 9 18 0zM-5-12v3M0-12v4M5-12v3M-16-26l-4-4M16-26l4-4M0-31v-5",
+  giraffe:"M-4 0l2-22-5-7 2-3 5 4 6-1-1 4-5 2 2 23M-3-36l-1-4M1-35l1-4M-1-14h1M1-8h1M-2-20h1",
+  icebergs:"M-20 0h40v-6h-40zM-20-6v-4h40v4M-22-14q6-10 12-2t12-4 12 2 10-6M-12-3h4M2-3h4",
+  lighthouse:"M-5 0l2-26h6l2 26zM-6-26h12M-3-26l1-6h4l1 6M0-36v3M-10-33l5 2M10-33l-5 2M-4-18h8M-4.5-9h9",
+  fort:"M-20 0q20-8 40 0M-6-3v-16h12v16M-8-19h16M-4-19v-4h8v4M-2-9h4"
+};
+const SEA_ART = {
+  octopus:"M-10-10a10 10 0 1 1 20 0c0 5-2 7-4 9M-10-10c0 5 2 7 4 9M-6-1c-2 6-8 6-9 1M-2 0c-1 7-5 9-7 8M2 0c1 7 5 9 7 8M6-1c2 6 8 6 9 1M-4-12v1M4-12v1M-2-6q2 2 4 0",
+  whale:"M-24 0q6-14 26-12 12 1 16 8l8-8v14l-8-4q-8 10-26 8-12-1-16-6zM-14-4v1M-20-14q2-6 0-10M-20-14q-4-4-8-4M-20-14q4-4 8-4",
+  fish:"M-10 0q8-8 16 0-8 8-16 0zM6 0l6-5v10zM-5-1v1M-22-6q6-6 10 0-6 6-10 0zM-12-6l4-3v6z"
+};
 const AREA_GROUPS = [["Manly & nearby",["Manly"]],["The city",["The Rocks","Millers Point","City","The Langham, Millers Point"]],["Inner west",["Glebe","Newtown","St Peters","Rozelle"]],["North shore",["Cremorne Point","Cremorne"]],["Eastern suburbs",["Surry Hills","Bronte","Coogee"]]];
 
 /* projection (same as the coastline data) */
@@ -129,13 +149,28 @@ const el=(tag,attrs={},parent)=>{const n=document.createElementNS(NS,tag);for(co
 const svg=document.getElementById("map"), world=document.getElementById("world");
 const gStroke=el("g",{class:"coast-stroke"},world), gFill=el("g",{class:"coast-fill"},world), gWave=el("g",{class:"coast-wave"},world);
 [...MAP.ocean,...MAP.water].forEach(d=>{el("path",{d},gStroke);el("path",{d},gFill);el("path",{d},gWave)});
-const gDeco=el("g",{},world), gLabels=el("g",{},world), gRoute=el("g",{},world), gPins=el("g",{},world), gTop=el("g",{class:"ghost-pin"},world);
+const defs=svg.querySelector("defs");
+defs.insertAdjacentHTML("beforeend",`<pattern id="parkdots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill="#151514" opacity=".55"/><circle cx="10" cy="10" r="1" fill="#151514" opacity=".55"/><path d="M9 4.5a1.8 1.8 0 1 1 3.6 0 1.8 1.8 0 0 1-3.6 0zM10.8 6.3v1.7" fill="none" stroke="#151514" stroke-width=".9" opacity=".6"/></pattern>
+  <pattern id="sand" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".7" fill="#151514" opacity=".6"/><circle cx="4.5" cy="4.5" r=".7" fill="#151514" opacity=".6"/></pattern>`);
+const gParks=el("g",{class:"parks"},world), gBeach=el("g",{class:"beaches"},world), gFerry=el("g",{class:"ferries"},world);
+LAYERS.parks.forEach(d=>el("path",{d},gParks));
+LAYERS.beaches.forEach(d=>el("path",{d},gBeach));
+LAYERS.ferries.forEach(f=>el("path",{d:f.d},gFerry));
+const gDeco=el("g",{},world), gLabels=el("g",{},world), gMarks=el("g",{class:"marks"},world), gRoute=el("g",{},world), gPins=el("g",{},world), gTop=el("g",{class:"ghost-pin"},world);
 const scaledNodes=[];
-DECO.forEach(([kind,la,ln,sz])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"deco"},gDeco);
+const doodle=(parent,d,cls)=>el("path",{d,class:cls||"deco"},parent);
+DECO.filter(([k])=>SEA_ART[k]).forEach(([k,la,ln,sz])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"deco creature"},gDeco);doodle(g,SEA_ART[k]);scaledNodes.push([g,x,y,sz])});
+LAYERS.ferries.forEach(f=>{const g=el("g",{class:"ferrytag"},gLabels);el("use",{href:"#i-ferry",x:-9,y:-20,width:18,height:18},g);
+  const t=el("text",{x:0,y:10,class:"area nature"},g);t.textContent=f.name;scaledNodes.push([g,f.x,f.y,1])});
+LAYERS.suburbs.forEach(([t,x,y,tier])=>{const n=el("text",{class:`area sub t${tier}`+(tier===1?" big":"")},gLabels);n.textContent=t;scaledNodes.push([n,x,y,1])});
+NATURE.forEach(([t,la,ln])=>{const[x,y]=proj(la,ln);const n=el("text",{class:"area nature"},gLabels);n.textContent=t;scaledNodes.push([n,x,y,1])});
+LANDMARKS.forEach(([t,la,ln,art])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"landmark"},gMarks);
+  el("path",{d:LANDMARK_ART[art],class:"lm-art"},g);
+  const tx=el("text",{x:0,y:13,class:"lm-label"},g);tx.textContent=t;scaledNodes.push([g,x,y,"lm"])});
+DECO.filter(([k])=>!SEA_ART[k]).forEach(([kind,la,ln,sz])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"deco"},gDeco);
   if(kind==="moon"){el("path",{d:"M6-16a17 17 0 1 0 14 26A14 14 0 0 1 6-16z",fill:"#fcfcfa"},g);el("path",{d:"M24-20l1.6 4.4 4.4 1.6-4.4 1.6L24-8l-1.6-4.4-4.4-1.6 4.4-1.6z"},g)}
   else el("path",{d:"M0-12l3 9 9 3-9 3-3 9-3-9-9-3 9-3z",fill:"#fcfcfa"},g);
   scaledNodes.push([g,x,y,sz])});
-AREAS.forEach(([t,la,ln,big])=>{const[x,y]=proj(la,ln);const n=el("text",{class:"area"+(big?" big":"")},gLabels);n.textContent=t;scaledNodes.push([n,x,y,1])});
 SEAS.forEach(([t,la,ln])=>{const[x,y]=proj(la,ln);const n=el("text",{class:"area sea"},gLabels);n.textContent=t;scaledNodes.push([n,x,y,1])});
 const route=el("path",{class:"route",d:""},gRoute);
 const ghost=el("g",{},gTop); ghost.style.display="none";
@@ -178,9 +213,20 @@ function render(){
   document.getElementById("waves").setAttribute("patternTransform",`scale(${s})`);
   document.getElementById("hatch").setAttribute("patternTransform",`scale(${s}) rotate(45)`);
   ALL.forEach(sp=>pinNodes[sp.id]&&pinNodes[sp.id].g.setAttribute("transform",`translate(${sp.x} ${sp.y}) scale(${s*pinK()})`));
-  scaledNodes.forEach(([n,x,y,k])=>n.setAttribute("transform",`translate(${x} ${y}) scale(${s*k})`));
+  const lmK=view.w>650?0.6:view.w>280?0.8:1;
+  scaledNodes.forEach(([n,x,y,k])=>n.setAttribute("transform",`translate(${x} ${y}) scale(${s*(k==="lm"?lmK:k)})`));
   if(draft&&draft.x!=null) ghost.setAttribute("transform",`translate(${draft.x} ${draft.y}) scale(${s*pinK()})`);
   svg.classList.toggle("labels",view.w<170);
+  ["parkdots","sand"].forEach(id=>document.getElementById(id).setAttribute("patternTransform",`scale(${s})`));
+  svg.dataset.zoom=view.w<280?"3":view.w<650?"2":"1";
+  drawScale(pw);
+}
+const scaleEl=document.getElementById("scalebar");
+function drawScale(pw){
+  if(!scaleEl)return;
+  const mPerPx=view.w*11.1/pw; const steps=[50,100,200,250,500,1000,2000,5000];
+  const m=steps.find(v=>v/mPerPx>=55)||5000; const len=Math.round(m/mPerPx);
+  scaleEl.innerHTML=`<svg width="${len+4}" height="12" aria-hidden="true"><path d="M2 2v8h${len}V2M${2+len/2} 6v4" fill="none" stroke="#151514" stroke-width="2" stroke-linecap="round"/></svg><span>${m>=1000?m/1000+" km":m+" m"}</span>`;
 }
 let anim=null;
 function flyTo(target,ms=650){
@@ -286,10 +332,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!modal.dataset.l
 
 const flapSVG=()=>`<svg class="flap" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 50 18 100 0" fill="none" stroke="#151514" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
   <svg class="seal" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2l4 4 5.6-.6.9 5.5 5 2.6-2 5.2 2 5.2-5 2.6-.9 5.5-5.6-.6-4 4-4-4-5.6.6-.9-5.5-5-2.6 2-5.2-2-5.2 5-2.6.9-5.5 5.6.6z" fill="#151514"/><path d="M23 12a8 8 0 1 0 6 12.5A6.5 6.5 0 0 1 23 12z" fill="none" stroke="#fff" stroke-width="2"/></svg>`;
-const spellCards=(id,cls="")=>{const list=spellsFor(id);
+const spellCards=(id,cls="")=>{const list=spellsFor(id).slice(0,1);
   if(!list.length)return `<div class="envelope ${cls}"><p class="note">The Coven is still writing this spell. Check back soon!</p></div>`;
   return `<div class="spells">${list.map(sp=>`<div class="envelope ${cls}"><p class="note">${esc(sp.message)}</p><p class="note-from">love, ${esc(sp.from_name||COVEN)} ♡</p></div>`).join("")}</div>`};
-const fromLine=id=>{const n=[...new Set(spellsFor(id).map(s=>s.from_name||COVEN))];return n.length?n.join(" & "):COVEN};
+const fromLine=id=>{const sp=spellsFor(id)[0];return (sp&&sp.from_name)||COVEN};
 const gmapsUrl=s=>`https://www.google.com/maps/search/?api=1&query=${s.mine?`${s.lat},${s.lng}`:encodeURIComponent(s.name+", "+(s.area||"")+", Sydney")}`;
 
 function spotForm({title,back,withArea,withSpell,fromName,onSave}){
@@ -524,7 +570,7 @@ function covenHome(){
   current=null; clearDraft(); refreshPins();
   let h=`<div class="tabs" role="tablist">
     <button class="tab" role="tab" id="t-theo" aria-selected="${tab==="theo"}">Theo</button>
-    <button class="tab" role="tab" id="t-spells" aria-selected="${tab==="spells"}">Spells</button>
+    <button class="tab" role="tab" id="t-spells" aria-selected="${tab==="spells"}">Spots</button>
     <button class="tab" role="tab" id="t-quests" aria-selected="${tab==="quests"}">Quests</button></div>`;
   if(tab==="theo"){
     const opened=spots.filter(s=>isOpen(s.id)), dn=spots.filter(s=>isDone(s.id));
@@ -540,9 +586,9 @@ function covenHome(){
     h+=opened.length?opened.sort((a,b)=>String(progress[b.id].unlocked_at).localeCompare(String(progress[a.id].unlocked_at))).map(s=>`<button class="spotrow" data-spot="${esc(s.id)}">${iconSVG(s.cat)}<span class="nm">${esc(s.name)}<small>${esc(s.area||"")}</small></span><span class="st">${isDone(s.id)?"complete ✓":"unlocked"} · ${fmtDate(progress[s.id].unlocked_at)}</span></button>`).join("")
       :`<div class="empty">Nothing unlocked yet.</div>`;
   } else if(tab==="spells"){
-    h+=`<p class="lede">Tap a spot to read its spells or write a new one. Every spot can hold spells from lots of you.</p>
+    h+=`<p class="lede">Every spot holds one sealed note for Theo. Tap a spot to write or change its note.</p>
       <div class="rowbtns"><button class="pill dark" id="newspot">${smallIcon("i-moon")}Add a new spot</button></div>`;
-    h+=groupedRows(()=>true,s=>{const n=spellsFor(s.id).length;return n?`${n} spell${n>1?"s":""}`:"no spells yet"});
+    h+=groupedRows(()=>true,s=>{const n=spellsFor(s.id).length;return n?"note written ✓":"needs a note"});
   } else {
     h+=`<p class="lede">Quests are little routes of 3–4 spots for a free few hours.</p>
       <div class="rowbtns"><button class="pill dark" id="newquest">${smallIcon("i-moon")}Make a new quest</button></div>`;
@@ -566,11 +612,11 @@ function covenHome(){
     box.querySelector("[data-yes]").onclick=async()=>{const {error}=await sb.from("quests").delete().eq("id",id);
       if(error){toast("Couldn't delete: "+error.message);return} if(quest&&quest.id===id)selectQuest(null); await reloadCoven(); covenHome(); toast("Quest deleted")}});
   if($("#newspot"))$("#newspot").onclick=()=>{draft={name:"",area:"",cat:"cafe",tip:"",note:"",from:member.name};
-    spotForm({title:"Add a new spot",back:"back to spells",withArea:true,withSpell:true,fromName:member.name,onSave:async d=>{
+    spotForm({title:"Add a new spot",back:"back to spots",withArea:true,withSpell:true,fromName:member.name,onSave:async d=>{
       const id=slug(d.name);
       const {error}=await sb.from("spots").insert({id,name:d.name.trim(),area:d.area.trim()||null,cat:d.cat,tip:d.tip.trim()||null,lat:d.lat,lng:d.lng});
       if(error){console.warn(error);return false}
-      if(d.note.trim()){const r=await sb.from("spells").insert({spot_id:id,from_name:(d.from||member.name).trim(),message:d.note.trim()}); if(r.error)toast("Spot saved, but the spell didn't: "+r.error.message)}
+      if(d.note.trim()){const r=await sb.from("spells").insert({spot_id:id,from_name:(d.from||member.name).trim(),message:d.note.trim()}); if(r.error)toast("Spot saved, but the note didn't: "+r.error.message)}
       clearDraft(); await reloadCoven(); tab="spells"; covenSpot(id,true); toast("New spot added. Theo will see it next time she opens her map."); return true}})};
   if($("#newquest"))$("#newquest").onclick=()=>questForm({name:"",when:"",stops:[]});
 }
@@ -588,34 +634,25 @@ function covenSpot(id,fly){
     <div class="spot-head">${iconSVG(s.cat)}<div><h2>${esc(s.name)}</h2><div class="sub">${(CATS[s.cat]||CATS.heart)[0]} · ${esc(s.area||"")} · ${isDone(id)?"Theo completed it ✓":isOpen(id)?"Theo has unlocked it":"still sealed"}</div></div></div>`;
   if(s.tip)h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)}</p>`;
   if(p&&p.reply)h+=`<div class="reply" style="margin-bottom:14px"><h3>Theo's note back</h3><p class="mine-note">${esc(p.reply)}</p></div>`;
-  h+=`<h3 class="group" style="margin-top:6px">Spells here</h3>`;
-  h+=list.length?`<div class="card-list">${list.map(sp=>`<div class="item"><div class="q">${esc(sp.message)}</div><div class="s">love, ${esc(sp.from_name||COVEN)} · ${fmtDate(sp.created_at)}</div>
-      <div class="acts"><button class="linkbtn" data-edit="${esc(sp.id)}">Edit</button><button class="linkbtn" data-del="${esc(sp.id)}">Delete</button></div><div data-box="${esc(sp.id)}"></div></div>`).join("")}</div>`
-    :`<div class="empty">No spells here yet. Write the first one!</div>`;
-  h+=`<div class="reply" style="margin-top:14px"><h3>Write a spell for this spot</h3>
-      <label for="smsg">Your note for Theo<textarea id="smsg" maxlength="600" placeholder="Dear Theo…"></textarea></label>
-      <label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(member.name)}"></label>
-      <button class="big" id="addspell">Add my spell</button><p class="hint" id="smsgx"></p></div>
+  const note=list[0];
+  h+=`<div class="reply"><h3>${note?"The note for Theo":"Write the note for Theo"}</h3>
+      <label for="smsg">What she'll read when she breaks the seal<textarea id="smsg" maxlength="600" placeholder="Dear Theo…">${esc(note?note.message:"")}</textarea></label>
+      <label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(note?(note.from_name||""):member.name)}"></label>
+      <button class="big" id="savenote">${note?"Save changes":"Save note"}</button><p class="hint" id="smsgx">${note?`Last saved ${fmtDate(note.created_at)}.`:""}</p></div>
     <div class="stack"><button class="big ghost" id="delspot">Delete this whole spot</button><div id="delspotbox"></div></div>`;
   panel.innerHTML=h; panel.scrollTop=0;
   const $=q=>panel.querySelector(q);
   $("#back").onclick=covenHome;
-  $("#addspell").onclick=async()=>{const m=$("#smsg").value.trim(); if(!m){$("#smsgx").textContent="Write your spell first.";return}
-    $("#addspell").disabled=true;
-    const {error}=await sb.from("spells").insert({spot_id:id,from_name:$("#sfrom").value.trim()||member.name,message:m});
-    if(error){$("#addspell").disabled=false;$("#smsgx").textContent="That didn't save: "+error.message;return}
-    await reloadCoven(); covenSpot(id,false); toast("Spell added ✦")};
-  panel.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const sid=b.dataset.del;const box=panel.querySelector(`[data-box="${CSS.escape(sid)}"]`);
-    box.innerHTML=`<div class="row2" style="margin-top:6px"><button class="big" data-yes>Delete</button><button class="big ghost" data-no>Keep</button></div>`;
-    box.querySelector("[data-no]").onclick=()=>{box.innerHTML=""};
-    box.querySelector("[data-yes]").onclick=async()=>{const {error}=await sb.from("spells").delete().eq("id",sid); if(error){toast("Couldn't delete: "+error.message);return} await reloadCoven(); covenSpot(id,false); toast("Spell deleted")}});
-  panel.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const sid=b.dataset.edit; const sp=spells.find(x=>String(x.id)===sid); const box=panel.querySelector(`[data-box="${CSS.escape(sid)}"]`);
-    box.innerHTML=`<div class="stack" style="margin-top:6px"><textarea data-t maxlength="600">${esc(sp.message)}</textarea><input type="text" data-f maxlength="40" value="${esc(sp.from_name||"")}"><div class="row2"><button class="big" data-yes>Save</button><button class="big ghost" data-no>Cancel</button></div></div>`;
-    box.querySelector("[data-no]").onclick=()=>{box.innerHTML=""};
-    box.querySelector("[data-yes]").onclick=async()=>{const {error}=await sb.from("spells").update({message:box.querySelector("[data-t]").value.trim(),from_name:box.querySelector("[data-f]").value.trim()}).eq("id",sid);
-      if(error){toast("Couldn't save: "+error.message);return} await reloadCoven(); covenSpot(id,false); toast("Spell updated")}});
+  $("#savenote").onclick=async()=>{const m=$("#smsg").value.trim(), f=$("#sfrom").value.trim()||member.name;
+    if(!m){$("#smsgx").textContent="Write the note first.";return}
+    $("#savenote").disabled=true;
+    const {error}=note
+      ? await sb.from("spells").update({message:m,from_name:f}).eq("id",note.id)
+      : await sb.from("spells").insert({spot_id:id,from_name:f,message:m});
+    if(error){$("#savenote").disabled=false;$("#smsgx").textContent="That didn't save: "+error.message;return}
+    await reloadCoven(); covenSpot(id,false); toast("Note saved ✦")};
   $("#delspot").onclick=()=>{const box=$("#delspotbox");
-    box.innerHTML=`<p style="margin:0;text-align:center">Delete ${esc(s.name)} and all its spells? Theo will lose it from her map.</p><div class="row2"><button class="big" data-yes>Delete it</button><button class="big ghost" data-no>Keep it</button></div>`;
+    box.innerHTML=`<p style="margin:0;text-align:center">Delete ${esc(s.name)} and its note? Theo will lose it from her map.</p><div class="row2"><button class="big" data-yes>Delete it</button><button class="big ghost" data-no>Keep it</button></div>`;
     box.querySelector("[data-no]").onclick=()=>{box.innerHTML=""};
     box.querySelector("[data-yes]").onclick=async()=>{const {error}=await sb.from("spots").delete().eq("id",id); if(error){toast("Couldn't delete: "+error.message);return}
       await reloadCoven(); tab="spells"; covenHome(); toast("Spot deleted")}};
