@@ -414,7 +414,7 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave,onBack,noNote,s
       ${withArea?`<label for="sarea">Suburb<input type="text" id="sarea" maxlength="40" value="${esc(draft.area||"")}" placeholder="e.g. Newtown"></label>`:""}
       <label for="scat">What kind of spot?<select id="scat">${cats.map(([k,[n]])=>`<option value="${k}"${draft.cat===k?" selected":""}>${n}</option>`).join("")}</select></label>
       ${withArea?`<label for="saddr">Address (fills in when you search below)<input type="text" id="saddr" maxlength="120" value="${esc(draft.address||"")}" placeholder="e.g. 633 Bourke St, Surry Hills NSW 2010"></label>`:""}
-      ${withArea?`<label for="stip">Good to know (address, hours, what to order)<textarea id="stip" maxlength="300" style="font-family:var(--hand);font-size:18px">${esc(draft.tip||"")}</textarea></label>`:""}
+      ${withArea?`<label for="stip">Good to know (what to order, how to find it). Skip opening hours: the Google Maps button shows them live.<textarea id="stip" maxlength="300" style="font-family:var(--hand);font-size:18px">${esc(draft.tip||"")}</textarea></label>`:""}
       ${noNote?"":`<label for="snote">${withSpell?"Your spell for Theo (the note she unlocks there)":"A little note to yourself (optional)"}<textarea id="snote" maxlength="600" placeholder="${withSpell?"Dear Theo…":"Why it's magic…"}">${esc(draft.note||"")}</textarea></label>`}
       ${withSpell?`<label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(draft.from||fromName||"")}"></label>`:""}
       <div class="findbox"><div style="font-size:16px">Where is it?</div>
@@ -556,8 +556,8 @@ function drawSpot(){
   let h=`<button class="back" id="back">← back to ${backTo}</button>
     <div class="spot-head">${iconSVG(s.cat)}<div><h2>${esc(s.name)}</h2><div class="sub">${(CATS[s.cat]||CATS.heart)[0]}${s.area?` · ${esc(s.area)}`:""}${s.mine?" · your spot":""}</div></div></div>`;
   h+=addrLine(s);
-  if(s.tip) h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)} Check opening hours before you go.</p>`;
-  h+=`<div class="links"><a href="${gmapsUrl(s)}" target="_blank" rel="noopener">Directions in Google Maps ↗</a></div>`;
+  if(s.tip) h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)}</p>`;
+  h+=`<div class="links"><a href="${gmapsUrl(s)}" target="_blank" rel="noopener">${s.mine?"Directions in Google Maps ↗":"Opening hours & directions in Google Maps ↗"}</a></div>`;
 
   if(s.mine){
     if(s.note) h+=`<div class="envelope"><p class="note">${esc(s.note)}</p></div>`;
@@ -746,6 +746,7 @@ function covenSpot(id,fly){
     <div class="spot-head">${iconSVG(s.cat)}<div><h2>${esc(s.name)}</h2><div class="sub">${(CATS[s.cat]||CATS.heart)[0]} · ${esc(s.area||"")} · ${isDone(id)?"Theo completed it ✓":isOpen(id)?"Theo has unlocked it":"still sealed"}</div></div></div>`;
   h+=addrLine(s);
   if(s.tip)h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)}</p>`;
+  h+=`<div class="links" style="margin-bottom:12px"><a href="${gmapsUrl(s)}" target="_blank" rel="noopener">Opening hours & directions in Google Maps ↗</a></div>`;
   if(p&&p.reply)h+=`<div class="reply" style="margin-bottom:14px"><h3>Theo's note back</h3><p class="mine-note">${esc(p.reply)}</p></div>`;
   const note=list[0];
   h+=`<div class="reply"><h3>${note?"The note for Theo":"Write the note for Theo"}</h3>
