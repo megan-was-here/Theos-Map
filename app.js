@@ -530,10 +530,10 @@ function pushCard(){
   const st=pushState(); if(st==="off"||store.get("pushhide",false))return "";
   if(st==="granted"&&store.get("pushon",false))return "";
   if(st==="install")return `<div class="reply pushcard"><h3>Want a buzz when new magic appears?</h3>
-    <p style="margin:0">Tap the Share button <b>⬆</b> at the bottom of Safari, then <b>Add to Home Screen</b>. Open Theo's Sydney from your Home Screen and you'll see a button here to turn notifications on.</p>
+    <p style="margin:0">Tap the Share button <b>⬆</b> at the bottom of Safari, then <b>Add to Home Screen</b>. Open Sydney Spells from your Home Screen and you'll see a button here to turn notifications on.</p>
     <div class="rowbtns"><button class="pill" id="pushno">Not now</button></div></div>`;
   if(st==="denied")return `<div class="reply pushcard"><h3>Notifications are off</h3>
-    <p style="margin:0">To get a buzz when the Coven adds new magic: open your phone's <b>Settings → Notifications → Theo's Sydney</b> and switch on Allow Notifications.</p>
+    <p style="margin:0">To get a buzz when the Coven adds new magic: open your phone's <b>Settings → Notifications → Sydney Spells</b> and switch on Allow Notifications.</p>
     <div class="rowbtns"><button class="pill" id="pushno">Got it</button></div></div>`;
   return `<div class="reply pushcard"><h3>Want a buzz when new magic appears?</h3>
     <p style="margin:0">We'll send you a little notification whenever the Coven adds a new spot or quest.</p>
