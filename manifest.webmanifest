@@ -1,7 +1,7 @@
 {
-  "name": "Theo's Sydney",
-  "short_name": "Theo's Sydney",
-  "description": "A quest map of Sydney from the Coven & Co.",
+  "name": "Sydney Spells",
+  "short_name": "Sydney Spells",
+  "description": "Sydney Spells, cast by Theo: a quest map from the Coven & Co.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

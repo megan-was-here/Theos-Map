@@ -1,6 +1,6 @@
-# Theo's Sydney
+# Sydney Spells (cast by Theo)
 
-A quest map of Sydney from the Coven & Co.
+A quest map of Sydney from the Coven & Co. (Theo's map is titled "Sydney Spells", subtitle "cast by Theo", from 26 Oct 2026).
 
 ⬆️ Back to the Theo folder: [INDEX](../INDEX.md)
 

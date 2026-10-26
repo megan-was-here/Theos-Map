@@ -28,7 +28,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible,input:focus-visibl
 .top{display:flex;align-items:center;gap:10px;padding-block:8px 6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:2px solid var(--gold);background:var(--ink);color:var(--hi)}
 .top .doodle{flex:none;width:34px;height:34px;color:var(--gold)}
 .top .ttl{min-width:0}
-.top h1{font-family:var(--display);font-weight:400;font-size:clamp(25px,7.2vw,40px);line-height:1;margin:0;letter-spacing:1px;white-space:nowrap;color:var(--gold)}
+.top h1{font-family:var(--display);font-weight:400;font-size:clamp(21px,6vw,40px);line-height:1;margin:0;letter-spacing:.5px;white-space:nowrap;color:var(--gold)}
 .top .from{font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:15px;line-height:1.1;color:var(--sea);margin-top:2px}
 .top .meta{margin-left:auto;text-align:right;font-size:13px;line-height:1.1;color:var(--sea);flex:none}
 .letterbtn{margin-left:auto;flex:none;display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:none;border:1.4px solid var(--gold);border-radius:12px 4px 12px 4px;color:var(--gold);padding:4px 8px 3px;font-size:12px;line-height:1;cursor:pointer}
