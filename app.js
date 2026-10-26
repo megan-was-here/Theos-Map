@@ -539,7 +539,8 @@ function pushCard(){
     <p style="margin:0">We'll send you a little notification whenever the Coven adds a new spot or quest.</p>
     <div class="rowbtns"><button class="pill dark" id="pushyes">Turn on notifications</button><button class="pill" id="pushno">Not now</button></div></div>`;
 }
-if(MODE==="theo"&&PUSH_KEY&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+// background helper: always-fresh updates (both pages) and notifications (Theo's map)
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 
 function home(){
   if(MODE==="coven")return covenHome();
