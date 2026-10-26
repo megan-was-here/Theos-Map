@@ -355,7 +355,7 @@ new ResizeObserver(()=>{clampView(view);render()}).observe(svg);
 /* placing a new spot by tapping the map */
 const placebar=document.getElementById("placebar");
 let afterPlace=null;
-function startPlacing(cb){afterPlace=cb;placing=true;svg.classList.add("placing");placebar.hidden=false;
+function startPlacing(cb){afterPlace=cb;placing=true;if(view3==="list")setView("split");svg.classList.add("placing");placebar.hidden=false;
   if(matchMedia("(max-width:859px)").matches)document.getElementById("mapwrap").scrollIntoView({block:"start"})}
 function stopPlacing(){placing=false;svg.classList.remove("placing");placebar.hidden=true}
 document.getElementById("placecancel").onclick=stopPlacing;
@@ -386,7 +386,28 @@ function selectQuest(id){
   quest=id?quests.find(q=>q.id===id)||null:null; if(quest)markViewed("q:"+quest.id); refreshPins();
   if(quest){const st=questStops(quest); if(st.length)flyTo(fitPoints(st.map(i=>[byId[i].x,byId[i].y]),60))}
 }
-function onPin(id,fly){ if(MODE==="theo")openSpot(id,fly); else covenSpot(id,fly) }
+/* ---------- phones: half-and-half, full list or full map ---------- */
+const appEl=document.querySelector(".app"), panelEl=document.getElementById("panel");
+const isPhone=()=>matchMedia("(max-width:859px)").matches;
+let view3="split";                                   // "split", "list" or "map"
+function setView(v){
+  if(!isPhone())v="split";
+  if(v===view3)return; view3=v; appEl.dataset.view=v;
+  toggleEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));
+}
+const toggleEl=document.createElement("div"); toggleEl.className="viewtoggle"; toggleEl.setAttribute("role","group"); toggleEl.setAttribute("aria-label","Show map or list");
+toggleEl.innerHTML=`<button type="button" data-v="map" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></svg>Map</button><button type="button" data-v="list" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>List</button>`;
+document.body.appendChild(toggleEl);
+toggleEl.querySelectorAll("button").forEach(b=>b.onclick=()=>setView(view3===b.dataset.v?"split":b.dataset.v));
+// scrolling the list up makes it full screen; pulling down at the top brings the map back
+panelEl.addEventListener("scroll",()=>{if(isPhone()&&view3==="split"&&panelEl.scrollTop>40)setView("list")},{passive:true});
+let pullY=null;
+panelEl.addEventListener("touchstart",e=>{pullY=(view3==="list"&&panelEl.scrollTop<=0)?e.touches[0].clientY:null},{passive:true});
+panelEl.addEventListener("touchmove",e=>{if(pullY!=null&&e.touches[0].clientY-pullY>70){pullY=null;setView("split")}},{passive:true});
+panelEl.addEventListener("wheel",e=>{if(view3==="list"&&panelEl.scrollTop<=0&&e.deltaY<-30)setView("split")},{passive:true});
+addEventListener("resize",()=>{if(!isPhone())setView("split")});
+
+function onPin(id,fly){ if(view3==="map")setView("split"); if(MODE==="theo")openSpot(id,fly); else covenSpot(id,fly) }
 
 function covenLink(text,label="Message the Coven",cls="pill"){
   if(!WHATSAPP) return `<button class="${cls}" data-copy="${esc(text)}">${smallIcon("i-chat")}Copy for the Coven chat</button>`;

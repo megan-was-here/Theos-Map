@@ -217,3 +217,19 @@ textarea{min-height:92px;resize:vertical;font-family:var(--note);font-size:20px}
 .compass{position:absolute;left:max(8px,env(safe-area-inset-left,0px));top:8px;width:54px;height:54px;pointer-events:none}
 .scalebar{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:12px;display:flex;align-items:flex-end;gap:6px;font-size:14px;line-height:1;pointer-events:none;background:var(--paper);padding:3px 6px;border-radius:8px}
 .pushcard{margin-top:12px}
+
+/* phones: map / list toggle (half-and-half, full list, full map) */
+.viewtoggle{display:none}
+@media (max-width:859px){
+  .app{transition:grid-template-rows .25s ease}
+  .app[data-view="list"]{grid-template-rows:auto 0fr minmax(0,1fr)}
+  .app[data-view="list"] .mapwrap{border-bottom:0}
+  .app[data-view="map"]{grid-template-rows:auto minmax(0,1fr) 0fr}
+  .app[data-view="map"] .panel{padding-block:0;overflow:hidden}
+  .viewtoggle{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:15;
+    background:var(--ink);border:1.6px solid var(--gold);border-radius:20px 7px 20px 7px;padding:3px;gap:3px;box-shadow:0 6px 18px rgba(33,68,78,.35)}
+  .viewtoggle button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--hi);font-size:16px;padding:6px 14px;border-radius:16px 5px 16px 5px;cursor:pointer}
+  .viewtoggle button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+  .viewtoggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .panel{padding-bottom:76px}
+}
