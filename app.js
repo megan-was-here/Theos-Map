@@ -29,19 +29,25 @@ const OLD_CATS = {swim:"outdoors",sunset:"outdoors",ferry:"outdoors",yoga:"exerc
   thrift:"shop",gift:"shop",crystal:"shop",book:"shop",market:"shop",cinema:"fun",art:"fun"};
 const grp = cat => GROUPS[cat] ? cat : (OLD_CATS[cat] || "heart");
 const CATS = new Proxy(GROUPS, {get:(t,k)=>t[grp(k)]});
-const SEAS = [["Pacific Ocean",-33.8650,151.3040],["Sydney Harbour",-33.8505,151.2470],["Middle Harbour",-33.8100,151.2330]];
+const SEAS = [["Pacific Ocean",-33.8650,151.3040],["Sydney Harbour",-33.8505,151.2470],["Middle Harbour",-33.8100,151.2330],
+  ["Pittwater",-33.6300,151.2930],["Botany Bay",-33.9890,151.1950],["Port Hacking",-34.0760,151.1250],["Pacific Ocean",-33.6900,151.3350],["Pacific Ocean",-34.1300,151.2400]];
 const DECO = [["moon",-33.8420,151.3020,1.1],["star",-33.8800,151.3040,.8],["star",-33.8240,151.3090,.6],["star",-33.9150,151.3000,.7],["star",-33.8960,151.2950,.5],
-  ["octopus",-33.9230,151.2900,1.2],["whale",-33.8650,151.3080,1.3],["fish",-33.7880,151.3080,1]];
+  ["octopus",-33.9230,151.2900,1.2],["whale",-33.8650,151.3080,1.3],["fish",-33.7880,151.3080,1],
+  ["whale",-33.6500,151.3380,1.3],["star",-33.6000,151.3400,.7],["moon",-34.0400,151.2800,1.1],["octopus",-34.1700,151.1600,1.2],["fish",-33.9700,151.2900,1],["star",-34.2000,151.0900,.6]];
 const LAYERS = window.THEO_LAYERS || {parks:[],beaches:[],ferries:[],suburbs:[]};
 const NATURE = [["Royal Botanic Garden",-33.8642,151.2166],["Hyde Park",-33.8731,151.2111],["Centennial Park",-33.8980,151.2340],["Moore Park",-33.8935,151.2205],
   ["Sydney Park",-33.9095,151.1840],["North Head",-33.8170,151.2950],["Callan Park",-33.8650,151.1520],["Bradleys Head",-33.8530,151.2470],
   ["Manly Beach",-33.7935,151.2900],["Shelly Beach",-33.8000,151.2995],["Bondi Beach",-33.8908,151.2770],["Bronte Beach",-33.9035,151.2690],
   ["Tamarama",-33.8990,151.2730],["Coogee Beach",-33.9205,151.2580],["Clovelly",-33.9135,151.2640],["Balmoral Beach",-33.8275,151.2520],
-  ["Camp Cove",-33.8395,151.2785],["Freshwater",-33.7805,151.2905]];
+  ["Camp Cove",-33.8395,151.2785],["Freshwater",-33.7805,151.2905],
+  ["Royal National Park",-34.1150,151.0550],["Ku-ring-gai Chase",-33.6400,151.2150],["Garigal National Park",-33.7300,151.2150],["Kamay Botany Bay",-34.0080,151.2250],
+  ["Palm Beach",-33.5990,151.3255],["Avalon Beach",-33.6355,151.3340],["Narrabeen",-33.7120,151.3060],["Dee Why",-33.7530,151.2985],
+  ["Maroubra",-33.9500,151.2600],["Cronulla Beach",-34.0520,151.1585],["Wattamolla",-34.1370,151.1180],["Garie Beach",-34.1700,151.0680]];
 const LANDMARKS = [
   ["Harbour Bridge",-33.85212,151.21078,"bridge"],["Opera House",-33.85720,151.21512,"opera"],["Sydney Tower",-33.87050,151.20895,"tower"],
   ["Luna Park",-33.84727,151.20980,"luna"],["Taronga Zoo",-33.84383,151.24137,"giraffe"],["Bondi Icebergs",-33.89505,151.27457,"icebergs"],
-  ["Macquarie Lighthouse",-33.85394,151.28519,"lighthouse"],["Fort Denison",-33.85494,151.22551,"fort"]];
+  ["Macquarie Lighthouse",-33.85394,151.28519,"lighthouse"],["Fort Denison",-33.85494,151.22551,"fort"],
+  ["Barrenjoey Lighthouse",-33.58020,151.32970,"lighthouse"]];
 const LANDMARK_ART = {
   bridge:"M-22-4h44M-20-4Q0-34 20-4M-14-4v-9M-7-4v-15M0-4v-17M7-4v-15M14-4v-9M-25-14h6v14h-6zM19-14h6v14h-6zM-22 0h44",
   opera:"M-24 0h48M-20 0Q-14-26-4 0M-10 0Q2-34 12 0M4 0Q14-22 22 0M-22-3h46",
@@ -60,7 +66,7 @@ const SEA_ART = {
 const AREA_GROUPS = [["Manly & nearby",["Manly"]],["The city",["The Rocks","Millers Point","City","The Langham, Millers Point"]],["Inner west",["Glebe","Newtown","St Peters","Rozelle"]],["North shore",["Cremorne Point","Cremorne"]],["Eastern suburbs",["Surry Hills","Bronte","Coogee"]]];
 
 /* projection (same as the coastline data) */
-const LON0=151.15, LAT0=-33.77, K=10000, COS=Math.cos(33.855*Math.PI/180);
+const LON0=MAP.lon0??151.15, LAT0=MAP.lat0??-33.77, K=10000, COS=Math.cos(33.855*Math.PI/180);  // map's top-left corner comes from build/bounds.json
 const proj=(lat,lng)=>[(lng-LON0)*COS*K,(LAT0-lat)*K];
 const unproj=(x,y)=>({lat:LAT0-y/K,lng:x/(COS*K)+LON0});
 
@@ -278,7 +284,10 @@ function render(){
   layoutClusters(s*pinK());
   ALL.forEach(sp=>{const k=s*pinK();pinNodes[sp.id]&&pinNodes[sp.id].g.setAttribute("transform",`translate(${sp.x+(sp._ox||0)*k} ${sp.y+(sp._oy||0)*k}) scale(${k})`)});
   const lmK=view.w>650?0.6:view.w>280?0.8:1;
-  scaledNodes.forEach(([n,x,y,k])=>n.setAttribute("transform",`translate(${x} ${y}) scale(${s*(k==="lm"?lmK:k)})`));
+  // only reposition labels and doodles near the visible area (the big map has hundreds); the rest catch up when panned to
+  const mx=view.w*0.3, x0=view.x-mx, x1=view.x+view.w+mx, y0=view.y-h*0.3, y1=view.y+h*1.3;
+  const all=!render.placed; render.placed=true;   // first time: place everything once
+  scaledNodes.forEach(([n,x,y,k])=>{if(!all&&(x<x0||x>x1||y<y0||y>y1))return; n.setAttribute("transform",`translate(${x} ${y}) scale(${s*(k==="lm"?lmK:k)})`)});
   if(draft&&draft.x!=null) ghost.setAttribute("transform",`translate(${draft.x} ${draft.y}) scale(${s*pinK()})`);
   svg.classList.toggle("labels",view.w<170);
   ["parkdots","sand"].forEach(id=>document.getElementById(id).setAttribute("patternTransform",`scale(${s})`));
