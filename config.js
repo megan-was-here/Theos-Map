@@ -11,11 +11,18 @@ window.THEO_CONFIG = {
   covenName: "The Coven & Co.",
 
   // The welcome letter Theo sees the first time she opens the map
-  intro: `The Coven has gathered, the candles are lit, and we've cast a little spell over Sydney just for you.
+  // (and any time she taps "Letter" in the top bar)
+  introTitle: "Hey Theo",
+  intro: `The Coven has gathered and we have cast some spells to make sure Sydney turns up the magic when you get to town.
 
-Hidden around the city are spots full of magic: cafes, tiny bars, rock pools, sunsets and treasure shops. Each one holds a sealed spell from one of us, and you break the seal when you get there.
+All you need do is follow the steps to collect a couple of key ingredients, making sure to cackle along the way as much as possible.
 
-Choose a quest when you've got a free few hours, or wander and see what you find. When you finish one, send us a note back.
+We've saved a few of our favorite spots and a few we think might become your favorites. Each comes with a cheeky little note you can unlock once you get there. There's even a few curated quests if you're ready to kill a couple hours casting spells.
 
-New magic will appear from time to time, so keep checking in.`
+Whenever you're in a need of a little magic from home, we've got something for you.
+
+And you never know, maybe as you get ticking you'll unlock a few more spells to play with.`,
+  introSignoff: `All our love and every ounce of magic we have to offer.
+
+The Coven & Co. x`
 };

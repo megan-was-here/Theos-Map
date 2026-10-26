@@ -398,7 +398,8 @@ function wireCopy(root){root.querySelectorAll("[data-copy]").forEach(a=>a.addEve
 const burst=`<svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#21444E" stroke-width="2.4" stroke-linecap="round"><path d="M45 6v10M45 44v10M17 30h10M63 30h10M25 12l7 7M58 41l7 7M65 12l-7 7M32 41l-7 7"/><path d="M45 22l2.4 5.6L53 30l-5.6 2.4L45 38l-2.4-5.6L37 30l5.6-2.4z" fill="#21444E"/></g></svg>`;
 function showModal(inner,onClose){
   modal.innerHTML=`<div class="card pop" role="dialog" aria-modal="true">${inner}</div>`; modal.hidden=false;
-  const b=modal.querySelector("[data-close]"); if(b){b.focus();b.onclick=()=>{modal.hidden=true;onClose&&onClose()}}
+  const card=modal.querySelector(".card"); card.scrollTop=0;
+  const b=modal.querySelector("[data-close]"); if(b){b.focus({preventScroll:true});b.onclick=()=>{modal.hidden=true;onClose&&onClose()}}
   wireCopy(modal);
 }
 modal.addEventListener("click",e=>{if(e.target===modal&&!modal.dataset.locked)modal.hidden=true});
@@ -636,8 +637,12 @@ function questDone(id,sent){
     ${sent?"":covenLink(replyOf(id)?`${s.name}: ${replyOf(id)}`:`Quest complete: ${s.name}!`,"Tell the Coven","big ghost")}
     <button class="big" data-close style="margin-top:10px">Keep exploring</button>`);
 }
+if(MODE==="theo"){const top=document.querySelector(".top"),meta=top&&top.querySelector(".meta");
+  if(top){const b=document.createElement("button");b.className="letterbtn";b.type="button";b.setAttribute("aria-label","Read the Coven's letter again");
+    b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17zM3.5 7l8.5 6.5L20.5 7"/></svg><span>Letter</span>`;
+    b.onclick=()=>{if(!modal.dataset.locked)intro()}; top.insertBefore(b,meta||null)}}
 function intro(){
-  showModal(`<h2>Dear Theo,</h2><p class="note">${esc(INTRO)}</p><p class="note-from">love, ${esc(COVEN)} ♡</p>
+  showModal(`<h2>${esc(CFG.introTitle||"Dear Theo,")}</h2><p class="note">${esc(INTRO)}</p><p class="note-from">${esc(CFG.introSignoff||`love, ${COVEN} ♡`)}</p>
     <button class="big" data-close style="margin-top:14px">Accept the quest</button>`);
 }
 function announceNew(){

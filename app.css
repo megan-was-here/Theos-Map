@@ -31,6 +31,9 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible,input:focus-visibl
 .top h1{font-family:var(--display);font-weight:400;font-size:clamp(25px,7.2vw,40px);line-height:1;margin:0;letter-spacing:1px;white-space:nowrap;color:var(--gold)}
 .top .from{font-family:"IM Fell English",Georgia,serif;font-style:italic;font-size:15px;line-height:1.1;color:var(--sea);margin-top:2px}
 .top .meta{margin-left:auto;text-align:right;font-size:13px;line-height:1.1;color:var(--sea);flex:none}
+.letterbtn{margin-left:auto;flex:none;display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:none;border:1.4px solid var(--gold);border-radius:12px 4px 12px 4px;color:var(--gold);padding:4px 8px 3px;font-size:12px;line-height:1;cursor:pointer}
+.letterbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.top .letterbtn+.meta{margin-left:6px}
 .top .meta b{display:block;color:var(--hi);font-family:"IM Fell English",Georgia,serif;font-size:22px;font-weight:400}
 
 /* map */
@@ -135,7 +138,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible,input:focus-visibl
 .envelope .msg{margin:52px 0 12px;text-align:center;font-size:18px}
 .envelope .msg small{display:block;color:var(--ink-soft);font-size:15px;margin-top:4px}
 .note{font-family:var(--note);font-size:23px;line-height:1.3;margin:0;white-space:pre-line}
-.note-from{font-family:var(--note);font-size:21px;text-align:right;margin:8px 0 0}
+.note-from{font-family:var(--note);font-size:21px;text-align:right;margin:12px 0 0;white-space:pre-line}
 .big{display:block;width:100%;border:2px solid var(--ink);background:var(--ink);color:var(--hi);font-size:20px;padding:10px 14px;border-radius:22px 8px 22px 8px;cursor:pointer;text-align:center;text-decoration:none}
 .big.ghost{background:var(--paper);color:var(--ink)}
 .confirm{display:grid;gap:8px;margin-top:52px}
