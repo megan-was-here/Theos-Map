@@ -401,9 +401,10 @@ const spellCards=(id,cls="")=>{const list=spellsFor(id).slice(0,1);
   if(!list.length)return `<div class="envelope ${cls}"><p class="note">The Coven is still writing this spell. Check back soon!</p></div>`;
   return `<div class="spells">${list.map(sp=>`<div class="envelope ${cls}"><p class="note">${esc(sp.message)}</p><p class="note-from">love, ${esc(sp.from_name||COVEN)} ♡</p></div>`).join("")}</div>`};
 const fromLine=id=>{const sp=spellsFor(id)[0];return (sp&&sp.from_name)||COVEN};
-const gmapsUrl=s=>`https://www.google.com/maps/search/?api=1&query=${s.mine?`${s.lat},${s.lng}`:encodeURIComponent(s.name+", "+(s.area||"")+", Sydney")}`;
+const gmapsUrl=s=>`https://www.google.com/maps/search/?api=1&query=${s.mine?`${s.lat},${s.lng}`:encodeURIComponent(s.address?s.name+", "+s.address:s.name+", "+(s.area||"")+", Sydney")}`;
+const addrLine=s=>s.address?`<p class="tip addr"><b>Address:</b> ${esc(s.address)}</p>`:"";
 
-function spotForm({title,back,withArea,withSpell,fromName,onSave}){
+function spotForm({title,back,withArea,withSpell,fromName,onSave,onBack,noNote,saveLabel}){
   if(draft.cat)draft.cat=grp(draft.cat);
   const cats=Object.entries(GROUPS);
   panel.innerHTML=`<button class="back" id="back">← ${esc(back)}</button>
@@ -412,8 +413,9 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave}){
       <label for="sname">What's it called?<input type="text" id="sname" maxlength="70" value="${esc(draft.name)}" placeholder="e.g. Best dumplings ever"></label>
       ${withArea?`<label for="sarea">Suburb<input type="text" id="sarea" maxlength="40" value="${esc(draft.area||"")}" placeholder="e.g. Newtown"></label>`:""}
       <label for="scat">What kind of spot?<select id="scat">${cats.map(([k,[n]])=>`<option value="${k}"${draft.cat===k?" selected":""}>${n}</option>`).join("")}</select></label>
+      ${withArea?`<label for="saddr">Address (fills in when you search below)<input type="text" id="saddr" maxlength="120" value="${esc(draft.address||"")}" placeholder="e.g. 633 Bourke St, Surry Hills NSW 2010"></label>`:""}
       ${withArea?`<label for="stip">Good to know (address, hours, what to order)<textarea id="stip" maxlength="300" style="font-family:var(--hand);font-size:18px">${esc(draft.tip||"")}</textarea></label>`:""}
-      <label for="snote">${withSpell?"Your spell for Theo (the note she unlocks there)":"A little note to yourself (optional)"}<textarea id="snote" maxlength="600" placeholder="${withSpell?"Dear Theo…":"Why it's magic…"}">${esc(draft.note||"")}</textarea></label>
+      ${noNote?"":`<label for="snote">${withSpell?"Your spell for Theo (the note she unlocks there)":"A little note to yourself (optional)"}<textarea id="snote" maxlength="600" placeholder="${withSpell?"Dear Theo…":"Why it's magic…"}">${esc(draft.note||"")}</textarea></label>`}
       ${withSpell?`<label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(draft.from||fromName||"")}"></label>`:""}
       <div class="findbox"><div style="font-size:16px">Where is it?</div>
         <label for="sfind" class="sub">Search for it
@@ -424,15 +426,15 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave}){
         <p class="hint">Can't find it? <a id="gmopen" href="#" target="_blank" rel="noopener">Look it up in Google Maps ↗</a>, then copy the link from the address bar.</p>
         <div class="where"><button class="pill" id="tapmap" type="button">…or tap the map</button></div>
         <p class="set" id="sset">${draft.lat!=null?`Placed on the map ✓${draft.placeLabel?` <span class="hint">(${esc(draft.placeLabel)})</span>`:""}`:"Not placed yet"}</p></div>
-      <button class="big" id="savespot">Save</button>
+      <button class="big" id="savespot">${esc(saveLabel||"Save")}</button>
       <p class="hint" id="formmsg"></p>
     </div>`;
   panel.scrollTop=0;
   const $=q=>panel.querySelector(q);
-  const keep=()=>{draft.name=$("#sname").value;draft.cat=$("#scat").value;draft.note=$("#snote").value;draft.find=$("#sfind").value;draft.link=$("#slink").value;
-    if(withArea){draft.area=$("#sarea").value;draft.tip=$("#stip").value} if(withSpell)draft.from=$("#sfrom").value};
-  $("#back").onclick=()=>{clearDraft();stopPlacing();home()};
-  $("#tapmap").onclick=()=>{keep();draft.placeLabel="";startPlacing(()=>spotForm({title,back,withArea,withSpell,fromName,onSave}))};
+  const keep=()=>{draft.name=$("#sname").value;draft.cat=$("#scat").value;if($("#snote"))draft.note=$("#snote").value;draft.find=$("#sfind").value;draft.link=$("#slink").value;
+    if(withArea){draft.area=$("#sarea").value;draft.address=$("#saddr").value;draft.tip=$("#stip").value} if(withSpell)draft.from=$("#sfrom").value};
+  $("#back").onclick=()=>{clearDraft();stopPlacing();(onBack||home)()};
+  $("#tapmap").onclick=()=>{keep();draft.placeLabel="";startPlacing(()=>spotForm({title,back,withArea,withSpell,fromName,onSave,onBack,noNote,saveLabel}))};
 
   /* finding the spot: search, or a pasted Google Maps link */
   const setMsg=t=>{$("#sset").innerHTML=t};
@@ -445,13 +447,17 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave}){
   const [lon1,lat1]=[unproj(0,0).lng,unproj(0,0).lat], [lon2,lat2]=[unproj(MW,MH).lng,unproj(MW,MH).lat];
   async function search(q){const box=$("#sresults"); q=q.trim(); if(!q){$("#sfind").focus();return}
     box.innerHTML=`<p class="hint">Searching…</p>`;
-    try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=au&bounded=1&viewbox=${lon1},${lat1},${lon2},${lat2}&q=${encodeURIComponent(q)}`);
+    try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=au&bounded=1&viewbox=${lon1},${lat1},${lon2},${lat2}&q=${encodeURIComponent(q)}`);
       const list=r.ok?await r.json():[];
       if(!list.length){box.innerHTML=`<p class="hint">Nothing found. Try adding the suburb, or paste a Google Maps link below.</p>`;return}
       box.innerHTML=list.map((p,i)=>{const parts=p.display_name.split(", ");return `<button class="pick" type="button" data-i="${i}"><b>${esc(p.name||parts[0])}</b> <span class="hint">${esc(parts.slice(1,4).join(", "))}</span></button>`}).join("");
       box.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{const p=list[+b.dataset.i];
         if(!$("#sname").value.trim()&&p.name)$("#sname").value=p.name;
-        if(withArea&&!$("#sarea").value.trim()){const a=p.address||{};const sub=a.suburb||a.neighbourhood||a.city_district||"";if(sub)$("#sarea").value=sub}
+        if(withArea){const a=p.address||{};const sub=a.suburb||a.neighbourhood||a.city_district||a.town||"";
+          if(sub&&!$("#sarea").value.trim())$("#sarea").value=sub;
+          const street=[a.house_number,a.road].filter(Boolean).join(" ");
+          const full=[street,[sub,"NSW",a.postcode].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+          if(street&&!$("#saddr").value.trim())$("#saddr").value=full}
         if(putPin(+p.lat,+p.lon,p.name||p.display_name.split(", ")[0]))box.innerHTML=""});
     }catch(e){box.innerHTML=`<p class="hint">Search isn't working right now. Paste a Google Maps link, or tap the map.</p>`}}
   $("#sfindgo").onclick=()=>search($("#sfind").value);
@@ -549,6 +555,7 @@ function drawSpot(){
   const backTo={quests:"quests",spots:"all spots",mine:"my spots"}[tab];
   let h=`<button class="back" id="back">← back to ${backTo}</button>
     <div class="spot-head">${iconSVG(s.cat)}<div><h2>${esc(s.name)}</h2><div class="sub">${(CATS[s.cat]||CATS.heart)[0]}${s.area?` · ${esc(s.area)}`:""}${s.mine?" · your spot":""}</div></div></div>`;
+  h+=addrLine(s);
   if(s.tip) h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)} Check opening hours before you go.</p>`;
   h+=`<div class="links"><a href="${gmapsUrl(s)}" target="_blank" rel="noopener">Directions in Google Maps ↗</a></div>`;
 
@@ -719,7 +726,7 @@ function covenHome(){
   if($("#newspot"))$("#newspot").onclick=()=>{draft={name:"",area:"",cat:"cafe",tip:"",note:"",from:member.name};
     spotForm({title:"Add a new spot",back:"back to spots",withArea:true,withSpell:true,fromName:member.name,onSave:async d=>{
       const id=slug(d.name);
-      const {error}=await sb.from("spots").insert({id,name:d.name.trim(),area:d.area.trim()||null,cat:d.cat,tip:d.tip.trim()||null,lat:d.lat,lng:d.lng});
+      const {error}=await sb.from("spots").insert({id,name:d.name.trim(),area:d.area.trim()||null,cat:d.cat,address:(d.address||"").trim()||null,tip:d.tip.trim()||null,lat:d.lat,lng:d.lng});
       if(error){console.warn(error);return false}
       if(d.note.trim()){const r=await sb.from("spells").insert({spot_id:id,from_name:(d.from||member.name).trim(),message:d.note.trim()}); if(r.error)toast("Spot saved, but the note didn't: "+r.error.message)}
       clearDraft(); await reloadCoven(); tab="spells"; covenSpot(id,true); toast("New spot added. Theo will see it next time she opens her map."); return true}})};
@@ -737,6 +744,7 @@ function covenSpot(id,fly){
   const list=spellsFor(id); const p=progress[id];
   let h=`<button class="back" id="back">← back to ${tab}</button>
     <div class="spot-head">${iconSVG(s.cat)}<div><h2>${esc(s.name)}</h2><div class="sub">${(CATS[s.cat]||CATS.heart)[0]} · ${esc(s.area||"")} · ${isDone(id)?"Theo completed it ✓":isOpen(id)?"Theo has unlocked it":"still sealed"}</div></div></div>`;
+  h+=addrLine(s);
   if(s.tip)h+=`<p class="tip"><b>Good to know:</b> ${esc(s.tip)}</p>`;
   if(p&&p.reply)h+=`<div class="reply" style="margin-bottom:14px"><h3>Theo's note back</h3><p class="mine-note">${esc(p.reply)}</p></div>`;
   const note=list[0];
@@ -744,7 +752,7 @@ function covenSpot(id,fly){
       <label for="smsg">What she'll read when she breaks the seal<textarea id="smsg" maxlength="600" placeholder="Dear Theo…">${esc(note?note.message:"")}</textarea></label>
       <label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(note?(note.from_name||""):member.name)}"></label>
       <button class="big" id="savenote">${note?"Save changes":"Save note"}</button><p class="hint" id="smsgx">${note?`Last saved ${fmtDate(note.created_at)}.`:""}</p></div>
-    <div class="stack"><button class="big ghost" id="delspot">Delete this whole spot</button><div id="delspotbox"></div></div>`;
+    <div class="stack"><button class="big ghost" id="editspot">Edit this spot's details</button><button class="big ghost" id="delspot">Delete this whole spot</button><div id="delspotbox"></div></div>`;
   panel.innerHTML=h; panel.scrollTop=0;
   const $=q=>panel.querySelector(q);
   $("#back").onclick=covenHome;
@@ -756,6 +764,13 @@ function covenSpot(id,fly){
       : await sb.from("spells").insert({spot_id:id,from_name:f,message:m});
     if(error){$("#savenote").disabled=false;$("#smsgx").textContent="That didn't save: "+error.message;return}
     await reloadCoven(); covenSpot(id,false); toast("Note saved ✦")};
+  $("#editspot").onclick=()=>{current=null;refreshPins();
+    draft={name:s.name,area:s.area||"",cat:s.cat,address:s.address||"",tip:s.tip||"",lat:s.lat,lng:s.lng,x:s.x,y:s.y,placeLabel:"where it is now"};
+    ghost.style.display="";render();
+    spotForm({title:"Edit "+s.name,back:"back to "+s.name,withArea:true,noNote:true,saveLabel:"Save changes",onBack:()=>covenSpot(id,false),onSave:async d=>{
+      const {error}=await sb.from("spots").update({name:d.name.trim(),area:(d.area||"").trim()||null,cat:d.cat,address:(d.address||"").trim()||null,tip:(d.tip||"").trim()||null,lat:d.lat,lng:d.lng}).eq("id",id);
+      if(error){console.warn(error);return false}
+      clearDraft(); await reloadCoven(); covenSpot(id,true); toast("Spot updated. Theo will see the changes next time she opens her map."); return true}})};
   $("#delspot").onclick=()=>{const box=$("#delspotbox");
     box.innerHTML=`<p style="margin:0;text-align:center">Delete ${esc(s.name)} and its note? Theo will lose it from her map.</p><div class="row2"><button class="big" data-yes>Delete it</button><button class="big ghost" data-no>Keep it</button></div>`;
     box.querySelector("[data-no]").onclick=()=>{box.innerHTML=""};

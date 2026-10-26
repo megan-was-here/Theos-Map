@@ -124,6 +124,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible,input:focus-visibl
 .spot-head h2{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.02;margin:0;text-wrap:balance}
 .spot-head .sub{color:var(--ink-soft);font-size:15px}
 .tip{margin:12px 0;font-size:17px}
+.tip.addr{margin-bottom:-4px}
 .tip b{font-weight:400;text-decoration:underline wavy;text-underline-offset:4px}
 .links{display:flex;gap:14px;flex-wrap:wrap;font-size:16px;margin-bottom:14px}
 .links a{color:var(--ink)}
