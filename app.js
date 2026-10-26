@@ -401,6 +401,8 @@ function setView(v){
   if(!isPhone())v="split";
   if(v===view3)return; view3=v; appEl.dataset.view=v;
   toggleEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));
+  // iPhone Safari sometimes leaves a resized scrolling area blank until it's touched: nudge it so it redraws
+  requestAnimationFrame(()=>{const t=panelEl.scrollTop; panelEl.scrollTop=t+1; panelEl.scrollTop=t; if(view3!=="list"){clampView(view); render()}});
 }
 const toggleEl=document.createElement("div"); toggleEl.className="viewtoggle"; toggleEl.setAttribute("role","group"); toggleEl.setAttribute("aria-label","Show map or list");
 toggleEl.innerHTML=`<button type="button" data-v="map" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></svg>Map</button><button type="button" data-v="list" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>List</button>`;
