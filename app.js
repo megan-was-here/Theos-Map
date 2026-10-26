@@ -8,6 +8,8 @@
 "use strict";
 const CFG = window.THEO_CONFIG || {};
 const MODE = document.body.dataset.mode || "theo";
+// "View as Theo" from the Coven page: Theo's map, look-only, loaded with the Coven sign-in (nothing is saved)
+const PREVIEW = MODE === "theo" && new URLSearchParams(location.search).has("preview");
 const MAP = window.THEO_MAPDATA;
 const COVEN = CFG.covenName || "The Coven & Co.";
 const INTRO = CFG.intro || "";
@@ -94,7 +96,7 @@ let theoCode=store.get("code","");
 class WrongCode extends Error{}
 async function loadAll(){
   if(!sb) throw new Error("not set up");
-  if(MODE==="theo"){
+  if(MODE==="theo"&&!PREVIEW){
     const {data,error}=await sb.rpc("theo_load",{p_code:theoCode});
     if(error){ if(/wrong code/i.test(error.message||"")) throw new WrongCode(); throw error; }
     spots=data.spots; spells=data.spells; quests=data.quests;
@@ -117,17 +119,22 @@ async function loadAll(){
   online=true;
 }
 
+let previewWarned=false;
+const previewNote=()=>{if(!previewWarned){previewWarned=true;toast("Preview only: this isn't saved, so Theo's map stays exactly as it is.")}};
 async function setProgress(spot_id,patch){
   progress[spot_id]={...(progress[spot_id]||{spot_id}),...patch};
+  if(PREVIEW){previewNote();return}
   const {error}=await sb.rpc("theo_save_progress",{p_code:theoCode,p_spot:spot_id,p_patch:patch});
   if(error){console.warn(error);toast("That didn't save. Check your internet and try again.")}
 }
 async function addMine(s){
+  if(PREVIEW){toast("Preview only: Theo adds her own spots on her map.");return null}
   const {data,error}=await sb.rpc("theo_add_spot",{p_code:theoCode,p_name:s.name,p_cat:s.cat,p_note:s.note,p_lat:s.lat,p_lng:s.lng});
   if(error){console.warn(error);toast("Couldn't save that spot. Check your internet and try again.");return null}
   mine.push(data); return data;
 }
 async function delMine(id){
+  if(PREVIEW){toast("Preview only: nothing is removed.");return false}
   const {error}=await sb.rpc("theo_del_spot",{p_code:theoCode,p_id:id}); if(error){toast("Couldn't remove it. Try again.");return false}
   mine=mine.filter(m=>m.id!==id); return true;
 }
@@ -522,7 +529,7 @@ const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="M
 const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
 function pushState(){
-  if(!PUSH_KEY||!sb||MODE!=="theo")return "off";
+  if(!PUSH_KEY||!sb||MODE!=="theo"||PREVIEW)return "off";
   if(isIOS&&!standalone())return "install";
   if(!pushSupported())return "off";
   return Notification.permission;            // "default", "granted" or "denied"
@@ -712,6 +719,12 @@ if(MODE==="theo"){const top=document.querySelector(".top"),meta=top&&top.querySe
   if(top){const b=document.createElement("button");b.className="letterbtn";b.type="button";b.setAttribute("aria-label","Read the Coven's letter again");
     b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v11h-17zM3.5 7l8.5 6.5L20.5 7"/></svg><span>Letter</span>`;
     b.onclick=()=>{if(!modal.dataset.locked)intro()}; top.insertBefore(b,meta||null)}}
+{const top=document.querySelector(".top"), meta=top&&top.querySelector(".meta");
+  const hb=(href,label,path)=>{const a=document.createElement("a");a.className="letterbtn";a.href=href;
+    a.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg><span>${label}</span>`;top.insertBefore(a,meta||null)};
+  if(top&&PREVIEW){document.body.classList.add("preview"); const f=top.querySelector(".from"); if(f)f.textContent="preview · nothing you tap is saved";
+    hb("coven.html","Coven","M15 5l-7 7 7 7")}
+  if(top&&MODE==="coven")hb("index.html?preview","View as Theo","M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z")}
 function intro(){
   showModal(`<h2>${esc(CFG.introTitle||"Dear Theo,")}</h2><p class="note">${esc(INTRO)}</p><p class="note-from">${esc(CFG.introSignoff||`love, ${COVEN} ♡`)}</p>
     <button class="big" data-close style="margin-top:14px">Accept the quest</button>`);
@@ -909,6 +922,14 @@ function askCode(msg){
     theoCode=v; modal.querySelector("#codemsg").textContent="Checking…"; openBook(true);
   });
 }
+async function openPreview(){
+  try{ await loadAll(); }
+  catch(err){ console.warn(err);
+    panel.innerHTML=`<div class="empty">To view Theo's map, sign in on the <a href="coven.html">Coven page</a> first, then tap "View as Theo".</div>`; return; }
+  modal.hidden=true; delete modal.dataset.locked;
+  rebuildIndex(); initSeen(); drawPins();
+  view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render(); home();
+}
 async function openBook(fromForm){
   try{ await loadAll(); }
   catch(err){
@@ -932,6 +953,6 @@ async function openBook(fromForm){
   rebuildIndex(); drawPins(); render(); view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render();
   if(MODE==="coven"){panel.innerHTML=`<div class="loading">Opening the spellbook…</div>`;return covenBoot()}
   panel.innerHTML=`<div class="loading">The spellbook is sealed…</div>`;
-  if(theoCode) openBook(); else askCode();
+  if(PREVIEW) openPreview(); else if(theoCode) openBook(); else askCode();
 })();
 })();
