@@ -1,7 +1,20 @@
-/* Theo's Sydney: background helper for notifications.
-   Shows the "new magic" buzz that Supabase sends, and opens the map when she taps it. */
+/* Theo's Sydney: background helper.
+   1. Always loads the newest version of the map's own files (GitHub lets phones keep old copies for 10 minutes).
+   2. Shows the "new magic" buzz that Supabase sends, and opens the map when she taps it. */
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+
+// Ask GitHub "has this changed?" every time (cheap: unchanged files come back as "not modified").
+// Only the map's own files; maps, fonts and Supabase are left alone. Falls back to the normal copy if offline.
+self.addEventListener("fetch", e => {
+  const req = e.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  e.respondWith(
+    fetch(new Request(req.url, { cache: "no-cache", credentials: "same-origin" })).catch(() => fetch(req))
+  );
+});
 
 self.addEventListener("push", e => {
   let d = {};
