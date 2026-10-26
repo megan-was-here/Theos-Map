@@ -11,18 +11,24 @@ const MODE = document.body.dataset.mode || "theo";
 const MAP = window.THEO_MAPDATA;
 const COVEN = CFG.covenName || "The Coven & Co.";
 const INTRO = CFG.intro || "";
-const WHATSAPP = CFG.whatsapp || "";
+let WHATSAPP = CFG.whatsapp || "";   // filled in from Supabase after the secret word
 let sb = null;
 if (CFG.supabaseUrl && CFG.supabaseKey && window.supabase) {
   sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
 }
 
-const CATS = {
-  cafe:["Cafes","i-cafe"], bar:["Little bars","i-bar"], swim:["Swims","i-swim"], yoga:["Yoga","i-yoga"],
-  massage:["Massage","i-massage"], sunset:["Sunsets","i-sunset"], thrift:["Thrift","i-thrift"], gift:["Trinkets","i-gift"],
-  crystal:["Crystals","i-crystal"], book:["Books","i-book"], cinema:["Cinemas","i-cinema"], art:["Art","i-art"],
-  market:["Markets","i-market"], ferry:["Ferry","i-ferry"], heart:["Other","i-heart"]
+/* The 6 kinds of spot: [name, icon, badge colour, icon colour].
+   Older spots saved with a detailed kind (swim, yoga, thrift...) are shown in their group via OLD_CATS. */
+const GROUPS = {
+  outdoors:["Outdoors","i-out","#D0C471","#21444E"], exercise:["Exercise","i-move","#798244","#F3EFD9"],
+  shop:["Shopping","i-shop","#97D3C9","#21444E"], fun:["Fun","i-fun","#618991","#F3EFD9"],
+  bar:["Bars","i-bar","#21444E","#D0C471"], cafe:["Cafes","i-cafe","#364203","#F3EFD9"],
+  heart:["Other","i-heart","#F3EFD9","#21444E"]
 };
+const OLD_CATS = {swim:"outdoors",sunset:"outdoors",ferry:"outdoors",yoga:"exercise",massage:"exercise",
+  thrift:"shop",gift:"shop",crystal:"shop",book:"shop",market:"shop",cinema:"fun",art:"fun"};
+const grp = cat => GROUPS[cat] ? cat : (OLD_CATS[cat] || "heart");
+const CATS = new Proxy(GROUPS, {get:(t,k)=>t[grp(k)]});
 const SEAS = [["Pacific Ocean",-33.8650,151.3040],["Sydney Harbour",-33.8505,151.2470],["Middle Harbour",-33.8100,151.2330]];
 const DECO = [["moon",-33.8420,151.3020,1.1],["star",-33.8800,151.3040,.8],["star",-33.8240,151.3090,.6],["star",-33.9150,151.3000,.7],["star",-33.8960,151.2950,.5],
   ["octopus",-33.9230,151.2900,1.2],["whale",-33.8650,151.3080,1.3],["fish",-33.7880,151.3080,1]];
@@ -65,7 +71,7 @@ const store={
 };
 if(location.hash==="#reset"){try{Object.keys(localStorage).filter(k=>k.startsWith("theo-sydney-")).forEach(k=>localStorage.removeItem(k))}catch(e){}}
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const iconSVG=cat=>`<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="#151514" stroke-width="2.4"/><use href="#${(CATS[cat]||CATS.heart)[1]}" x="9" y="9" width="22" height="22"/></svg>`;
+const iconSVG=cat=>{const[,ic,bg,fg]=CATS[cat];return `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.6" fill="#F3EFD9" stroke="#21444E" stroke-width="1.3"/><circle cx="20" cy="20" r="15.6" fill="${bg}" stroke="#21444E" stroke-width="1.6"/><use href="#${ic}" x="10" y="10" width="20" height="20" style="color:${fg}"/></svg>`};
 const smallIcon=id=>`<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${id}"/></svg>`;
 const slug=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,30)+"-"+Math.random().toString(36).slice(2,6);
 const fmtDate=d=>d?new Date(d).toLocaleDateString(undefined,{day:"numeric",month:"short"}):"";
@@ -87,6 +93,7 @@ async function loadAll(){
     if(error){ if(/wrong code/i.test(error.message||"")) throw new WrongCode(); throw error; }
     spots=data.spots; spells=data.spells; quests=data.quests;
     progress=Object.fromEntries(data.progress.map(p=>[p.spot_id,p])); mine=data.mine;
+    if(data.settings&&data.settings.whatsapp)WHATSAPP=data.settings.whatsapp;
     online=true; return;
   }
   const [a,b,c,d,e]=await Promise.all([
@@ -97,6 +104,8 @@ async function loadAll(){
     sb.from("theo_spots").select("*").order("created_at")
   ]);
   const err=[a,b,c,d,e].find(r=>r.error); if(err)throw err.error;
+  const st=await sb.from("theo_settings").select("key,value");
+  if(!st.error){const w=st.data.find(r=>r.key==="whatsapp"); if(w&&w.value)WHATSAPP=w.value}
   spots=a.data; spells=b.data; quests=c.data;
   progress=Object.fromEntries(d.data.map(p=>[p.spot_id,p])); mine=e.data;
   online=true;
@@ -150,13 +159,13 @@ const svg=document.getElementById("map"), world=document.getElementById("world")
 const gStroke=el("g",{class:"coast-stroke"},world), gFill=el("g",{class:"coast-fill"},world), gWave=el("g",{class:"coast-wave"},world);
 [...MAP.ocean,...MAP.water].forEach(d=>{el("path",{d},gStroke);el("path",{d},gFill);el("path",{d},gWave)});
 const defs=svg.querySelector("defs");
-defs.insertAdjacentHTML("beforeend",`<pattern id="parkdots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill="#151514" opacity=".55"/><circle cx="10" cy="10" r="1" fill="#151514" opacity=".55"/><path d="M9 4.5a1.8 1.8 0 1 1 3.6 0 1.8 1.8 0 0 1-3.6 0zM10.8 6.3v1.7" fill="none" stroke="#151514" stroke-width=".9" opacity=".6"/></pattern>
-  <pattern id="sand" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".7" fill="#151514" opacity=".6"/><circle cx="4.5" cy="4.5" r=".7" fill="#151514" opacity=".6"/></pattern>`);
+defs.insertAdjacentHTML("beforeend",`<pattern id="parkdots" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#B5BA86"/><circle cx="3" cy="4" r="1" fill="#364203" opacity=".55"/><circle cx="10" cy="10" r="1" fill="#364203" opacity=".55"/><path d="M9 4.5a1.8 1.8 0 1 1 3.6 0 1.8 1.8 0 0 1-3.6 0zM10.8 6.3v1.7" fill="none" stroke="#364203" stroke-width=".9" opacity=".5"/></pattern>
+  <pattern id="sand" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#D0C471"/><circle cx="1.5" cy="1.5" r=".7" fill="#7A6F2A" opacity=".5"/><circle cx="4.5" cy="4.5" r=".7" fill="#7A6F2A" opacity=".5"/></pattern>`);
 const gParks=el("g",{class:"parks"},world), gBeach=el("g",{class:"beaches"},world), gFerry=el("g",{class:"ferries"},world);
 LAYERS.parks.forEach(d=>el("path",{d},gParks));
 LAYERS.beaches.forEach(d=>el("path",{d},gBeach));
 LAYERS.ferries.forEach(f=>el("path",{d:f.d},gFerry));
-const gDeco=el("g",{},world), gLabels=el("g",{},world), gMarks=el("g",{class:"marks"},world), gRoute=el("g",{},world), gPins=el("g",{},world), gTop=el("g",{class:"ghost-pin"},world);
+const gDeco=el("g",{},world), gLabels=el("g",{},world), gMarks=el("g",{class:"marks"},world), gRoute=el("g",{},world), gPins=el("g",{},world), gClus=el("g",{},world), gTop=el("g",{class:"ghost-pin"},world);
 const scaledNodes=[];
 const doodle=(parent,d,cls)=>el("path",{d,class:cls||"deco"},parent);
 DECO.filter(([k])=>SEA_ART[k]).forEach(([k,la,ln,sz])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"deco creature"},gDeco);doodle(g,SEA_ART[k]);scaledNodes.push([g,x,y,sz])});
@@ -168,14 +177,14 @@ LANDMARKS.forEach(([t,la,ln,art])=>{const[x,y]=proj(la,ln);const g=el("g",{class
   el("path",{d:LANDMARK_ART[art],class:"lm-art"},g);
   const tx=el("text",{x:0,y:13,class:"lm-label"},g);tx.textContent=t;scaledNodes.push([g,x,y,"lm"])});
 DECO.filter(([k])=>!SEA_ART[k]).forEach(([kind,la,ln,sz])=>{const[x,y]=proj(la,ln);const g=el("g",{class:"deco"},gDeco);
-  if(kind==="moon"){el("path",{d:"M6-16a17 17 0 1 0 14 26A14 14 0 0 1 6-16z",fill:"#fcfcfa"},g);el("path",{d:"M24-20l1.6 4.4 4.4 1.6-4.4 1.6L24-8l-1.6-4.4-4.4-1.6 4.4-1.6z"},g)}
-  else el("path",{d:"M0-12l3 9 9 3-9 3-3 9-3-9-9-3 9-3z",fill:"#fcfcfa"},g);
+  if(kind==="moon"){el("path",{d:"M6-16a17 17 0 1 0 14 26A14 14 0 0 1 6-16z",fill:"#F3EFD9"},g);el("path",{d:"M24-20l1.6 4.4 4.4 1.6-4.4 1.6L24-8l-1.6-4.4-4.4-1.6 4.4-1.6z"},g)}
+  else el("path",{d:"M0-12l3 9 9 3-9 3-3 9-3-9-9-3 9-3z",fill:"#F3EFD9"},g);
   scaledNodes.push([g,x,y,sz])});
 SEAS.forEach(([t,la,ln])=>{const[x,y]=proj(la,ln);const n=el("text",{class:"area sea"},gLabels);n.textContent=t;scaledNodes.push([n,x,y,1])});
 const route=el("path",{class:"route",d:""},gRoute);
 const ghost=el("g",{},gTop); ghost.style.display="none";
-el("path",{d:"M0 0c-4-7-15-13-15-23a15 15 0 0 1 30 0C15-13 4-7 0 0z",fill:"#fcfcfa",stroke:"#151514","stroke-width":2.6,"stroke-dasharray":"4 3"},ghost);
-el("use",{href:"#i-heart",x:-11,y:-34,width:22,height:22},ghost);
+el("circle",{r:16,fill:"#F3EFD9",stroke:"#21444E","stroke-width":1.8,"stroke-dasharray":"4 3"},ghost);
+el("use",{href:"#i-heart",x:-10,y:-10,width:20,height:20},ghost);
 
 let pinNodes={};
 function drawPins(){
@@ -183,17 +192,20 @@ function drawPins(){
   ALL.forEach(s=>{
     const g=el("g",{class:"pin",tabindex:"0",role:"button","aria-label":s.name},gPins);
     g.dataset.id=s.id;
-    el("path",{d:"M0 0c-4-7-15-13-15-23a15 15 0 0 1 30 0C15-13 4-7 0 0z",class:"disc"},g);
-    el("use",{href:"#"+(CATS[s.cat]||CATS.heart)[1],x:-11,y:-34,width:22,height:22},g);
-    el("use",{href:"#i-lock",x:6,y:-44,width:15,height:15,class:"lock"},g);
-    el("use",{href:"#i-tick",x:5,y:-45,width:16,height:16,class:"tick"},g);
-    const hz=el("g",{class:"heart"},g); el("circle",{cx:13,cy:-37,r:8,fill:"#fcfcfa",stroke:"#151514","stroke-width":2},hz); el("use",{href:"#i-heart",x:7,y:-43,width:12,height:12},hz);
-    el("path",{class:"sparkle",d:"M17-38l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5zM-18-34l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"},g);
-    const num=el("g",{class:"num"},g); el("circle",{cx:-14,cy:-38,r:8,fill:"#151514"},num);
-    const nt=el("text",{x:-14,y:-34.5,"text-anchor":"middle","font-size":"12",fill:"#fff","font-family":"Patrick Hand, sans-serif"},num);
-    const nw=el("g",{class:"newtag"},g); el("rect",{x:-17,y:-60,width:34,height:15,rx:6,fill:"#151514"},nw);
-    const nwt=el("text",{x:0,y:-48.5,"text-anchor":"middle","font-size":"12",fill:"#fff","font-family":"Patrick Hand, sans-serif"},nw); nwt.textContent="NEW";
-    const lbl=el("text",{class:"lbl",x:18,y:-14},g); lbl.textContent=s.name;
+    // a round "wax seal" centred on the spot: thin outer ring, coloured coin, icon
+    const[,ic,bg,fg]=CATS[s.cat];
+    el("circle",{r:17.5,class:"ring"},g);
+    el("circle",{r:14.5,class:"disc",fill:bg},g);
+    el("use",{href:"#"+ic,x:-9.5,y:-9.5,width:19,height:19,style:`color:${fg}`},g);
+    const lk=el("g",{class:"lock"},g); el("circle",{cx:13,cy:-13,r:7,class:"tagc"},lk); el("path",{d:"M10.4-12.6v-1.8a2.6 2.6 0 0 1 5.2 0v1.8M9.4-12.6h7.2v4.6H9.4z",class:"tagi"},lk);
+    const tk=el("g",{class:"tick"},g); el("circle",{cx:13,cy:-13,r:7,fill:"#364203",stroke:"#21444E","stroke-width":1.3},tk); el("path",{d:"M9.8-13l2.2 2.3 4.2-4.8",fill:"none",stroke:"#D0C471","stroke-width":1.9,"stroke-linecap":"round","stroke-linejoin":"round"},tk);
+    const hz=el("g",{class:"heart"},g); el("circle",{cx:13,cy:-13,r:7,class:"tagc"},hz); el("use",{href:"#i-heart",x:8.5,y:-17.5,width:9,height:9},hz);
+    const sp=el("g",{class:"sparkle"},g); el("circle",{cx:13,cy:-13,r:7,fill:"#D0C471",stroke:"#21444E","stroke-width":1.3},sp); el("path",{d:"M13-17.5l1.2 3.3 3.3 1.2-3.3 1.2-1.2 3.3-1.2-3.3-3.3-1.2 3.3-1.2z",fill:"#21444E"},sp);
+    const num=el("g",{class:"num"},g); el("circle",{cx:-13,cy:-13,r:7.5,fill:"#21444E",stroke:"#F3EFD9","stroke-width":1.3},num);
+    const nt=el("text",{x:-13,y:-9.6,"text-anchor":"middle","font-size":"11",fill:"#D0C471","font-family":"Kalam, sans-serif"},num);
+    const nw=el("g",{class:"newtag"},g); el("rect",{x:-17,y:-36,width:34,height:14,rx:7,fill:"#21444E"},nw);
+    const nwt=el("text",{x:0,y:-25.5,"text-anchor":"middle","font-size":"10.5","letter-spacing":"1",fill:"#D0C471","font-family":"IM Fell English SC, serif"},nw); nwt.textContent="NEW";
+    const lbl=el("text",{class:"lbl",x:23,y:5},g); lbl.textContent=s.name;
     pinNodes[s.id]={g,nt};
     g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();onPin(s.id,true)}});
   });
@@ -207,12 +219,64 @@ function clampView(v){const[pw,ph]=pxSize(); v.w=Math.max(MINW,Math.min(MAXW,v.w
   v.x=Math.max(-v.w*0.4,Math.min(MW-v.w*0.6,v.x)); v.y=Math.max(-h*0.4,Math.min(MH-h*0.6,v.y)); return v}
 const pinK=()=>view.w>700?0.72:view.w>300?0.86:1;
 let draft=null, placing=false;
+
+/* Number bubbles: pins that would overlap on screen merge into one bubble showing how many.
+   Off when a quest is chosen or when zoomed right in (names showing). */
+let clusterKey="", clusterNodes=[];
+function layoutClusters(k){
+  const key=[Math.round(Math.log(k)*14),quest?quest.id:"",filter||"",current||"",ALL.length,view.w<170].join("|");
+  if(key!==clusterKey){clusterKey=key;buildClusters(k)}
+  clusterNodes.forEach(c=>c.g.setAttribute("transform",`translate(${c.x} ${c.y}) scale(${k})`));
+}
+function buildClusters(k){
+  gClus.innerHTML=""; clusterNodes=[];
+  ALL.forEach(sp=>{sp._ox=0;sp._oy=0;pinNodes[sp.id]&&pinNodes[sp.id].g.classList.remove("inclust")});
+  if(quest)return;
+  if(view.w<170){spreadPins(k);return}
+  const R=42*k, used=new Set();
+  const pool=ALL.filter(sp=>pinNodes[sp.id]&&sp.id!==current&&!(filter&&grp(sp.cat)!==filter));
+  pool.forEach(a=>{
+    if(used.has(a.id))return;
+    const mem=pool.filter(b=>!used.has(b.id)&&Math.hypot(b.x-a.x,b.y-a.y)<R);
+    if(mem.length<2)return;
+    mem.forEach(b=>{used.add(b.id);pinNodes[b.id].g.classList.add("inclust")});
+    const x=mem.reduce((t,b)=>t+b.x,0)/mem.length, y=mem.reduce((t,b)=>t+b.y,0)/mem.length;
+    const g=el("g",{class:"clus",tabindex:"0",role:"button","aria-label":`${mem.length} spots here. Zoom in`},gClus);
+    g.dataset.ids=mem.map(b=>b.id).join(",");
+    el("circle",{r:20,class:"ring"},g); el("circle",{r:16.5,fill:"#21444E"},g);
+    const t=el("text",{y:6,"text-anchor":"middle",class:"clusn"},g); t.textContent=mem.length;
+    const cols=[...new Set(mem.map(b=>CATS[b.cat][2]))].slice(0,4);
+    cols.forEach((c,i)=>el("circle",{cx:(i-(cols.length-1)/2)*9,cy:-20,r:4,fill:c,stroke:"#21444E","stroke-width":1.2},g));
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();zoomToCluster(g)}});
+    clusterNodes.push({g,x,y});
+  });
+}
+/* Zoomed right in: spots only metres apart are stacked in a short column so each name can be read. */
+function spreadPins(k){
+  const GAP=38*k, avg=(g,key)=>g.reduce((t,b)=>t+b[key],0)/g.length;
+  const box=g=>{const mx=avg(g,"x"), my=avg(g,"y"), half=(g.length-1)/2*GAP+20*k; return {mx,top:my-half,bot:my+half}};
+  let groups=ALL.filter(sp=>pinNodes[sp.id]).map(sp=>[sp]);
+  for(let changed=true, n=0; changed&&n<30; n++){   // keep merging stacks that would bump into each other
+    changed=false;
+    for(let i=0;i<groups.length&&!changed;i++)for(let j=i+1;j<groups.length;j++){
+      const a=box(groups[i]), b=box(groups[j]);
+      if(Math.abs(a.mx-b.mx)<40*k&&a.top<b.bot&&b.top<a.bot){groups[i]=groups[i].concat(groups[j]);groups.splice(j,1);changed=true;break}
+    }
+  }
+  groups.filter(g=>g.length>1).forEach(g=>{
+    g.sort((p,q)=>p.y-q.y); const mx=avg(g,"x"), my=avg(g,"y");
+    g.forEach((b,i)=>{b._ox=(mx-b.x)/k; b._oy=(my-b.y)/k+(i-(g.length-1)/2)*38});
+  });
+}
+function zoomToCluster(g){const ids=g.dataset.ids.split(",");flyTo(fitPoints(ids.map(i=>[byId[i].x,byId[i].y]),70))}
+
 function render(){
   const[pw,ph]=pxSize(); const h=view.w*ph/pw; svg.setAttribute("viewBox",`${view.x} ${view.y} ${view.w} ${h}`);
   const s=view.w/pw;
   document.getElementById("waves").setAttribute("patternTransform",`scale(${s})`);
   document.getElementById("hatch").setAttribute("patternTransform",`scale(${s}) rotate(45)`);
-  ALL.forEach(sp=>pinNodes[sp.id]&&pinNodes[sp.id].g.setAttribute("transform",`translate(${sp.x} ${sp.y}) scale(${s*pinK()})`));
+  layoutClusters(s*pinK());
+  ALL.forEach(sp=>{const k=s*pinK();pinNodes[sp.id]&&pinNodes[sp.id].g.setAttribute("transform",`translate(${sp.x+(sp._ox||0)*k} ${sp.y+(sp._oy||0)*k}) scale(${k})`)});
   const lmK=view.w>650?0.6:view.w>280?0.8:1;
   scaledNodes.forEach(([n,x,y,k])=>n.setAttribute("transform",`translate(${x} ${y}) scale(${s*(k==="lm"?lmK:k)})`));
   if(draft&&draft.x!=null) ghost.setAttribute("transform",`translate(${draft.x} ${draft.y}) scale(${s*pinK()})`);
@@ -226,7 +290,7 @@ function drawScale(pw){
   if(!scaleEl)return;
   const mPerPx=view.w*11.1/pw; const steps=[50,100,200,250,500,1000,2000,5000];
   const m=steps.find(v=>v/mPerPx>=55)||5000; const len=Math.round(m/mPerPx);
-  scaleEl.innerHTML=`<svg width="${len+4}" height="12" aria-hidden="true"><path d="M2 2v8h${len}V2M${2+len/2} 6v4" fill="none" stroke="#151514" stroke-width="2" stroke-linecap="round"/></svg><span>${m>=1000?m/1000+" km":m+" m"}</span>`;
+  scaleEl.innerHTML=`<svg width="${len+4}" height="12" aria-hidden="true"><path d="M2 2v8h${len}V2M${2+len/2} 6v4" fill="none" stroke="#21444E" stroke-width="2" stroke-linecap="round"/></svg><span>${m>=1000?m/1000+" km":m+" m"}</span>`;
 }
 let anim=null;
 function flyTo(target,ms=650){
@@ -254,7 +318,7 @@ function screenToMap(cx,cy){const[pw]=pxSize();const r=svg.getBoundingClientRect
 const ptrs=new Map(); let moved=0, downPin=null, pinch=null;
 svg.addEventListener("pointerdown",e=>{
   cancelAnimationFrame(anim); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===1){moved=0;downPin=e.target.closest(".pin")} else downPin=null;
+  if(ptrs.size===1){moved=0;downPin=e.target.closest(".pin,.clus")} else downPin=null;
   if(ptrs.size===2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)}}
   svg.setPointerCapture(e.pointerId); svg.classList.add("dragging");
 });
@@ -267,7 +331,7 @@ svg.addEventListener("pointermove",e=>{
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return; ptrs.delete(e.pointerId); if(ptrs.size<2)pinch=null;
   if(ptrs.size===0){svg.classList.remove("dragging");
-    if(moved<8){ if(placing){const[x,y]=screenToMap(e.clientX,e.clientY);finishPlacing(x,y)} else if(downPin)onPin(downPin.dataset.id,false) }
+    if(moved<8){ if(placing){const[x,y]=screenToMap(e.clientX,e.clientY);finishPlacing(x,y)} else if(downPin){ if(downPin.classList.contains("clus"))zoomToCluster(downPin); else onPin(downPin.dataset.id,false) } }
     downPin=null}
 }
 svg.addEventListener("pointerup",endPtr); svg.addEventListener("pointercancel",endPtr);
@@ -302,11 +366,12 @@ function refreshPins(){
     n.g.classList.toggle("open",o); n.g.classList.toggle("locked",!o); n.g.classList.toggle("done",isDone(s.id));
     n.g.classList.toggle("mine",!!s.mine); n.g.classList.toggle("isnew",!s.mine&&isNew(s.id));
     n.g.classList.toggle("instop",i>=0); if(i>=0)n.nt.textContent=i+1;
-    n.g.classList.toggle("dim",(!!quest&&i<0)||(!!filter&&s.cat!==filter&&i<0));
+    n.g.classList.toggle("dim",(!!quest&&i<0)||(!!filter&&grp(s.cat)!==filter&&i<0));
     n.g.classList.toggle("sel",current===s.id);
   });
   route.setAttribute("d",stops.length?"M"+stops.map(id=>`${byId[id].x} ${byId[id].y}`).join(" L"):"");
   const c=document.getElementById("count"); if(c)c.textContent=`${spots.filter(s=>isOpen(s.id)).length} / ${spots.length}`;
+  clusterKey=""; render();
 }
 function selectQuest(id){
   quest=id?quests.find(q=>q.id===id)||null:null; if(quest)markViewed("q:"+quest.id); refreshPins();
@@ -321,7 +386,7 @@ function covenLink(text,label="Message the Coven",cls="pill"){
 function copyText(t,msg){try{navigator.clipboard.writeText(t).then(()=>toast(msg||"Copied! Paste it into the Coven chat."),()=>{})}catch(e){}}
 function wireCopy(root){root.querySelectorAll("[data-copy]").forEach(a=>a.addEventListener("click",()=>{if(a.dataset.copy)copyText(a.dataset.copy)}))}
 
-const burst=`<svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#151514" stroke-width="2.4" stroke-linecap="round"><path d="M45 6v10M45 44v10M17 30h10M63 30h10M25 12l7 7M58 41l7 7M65 12l-7 7M32 41l-7 7"/><path d="M45 22l2.4 5.6L53 30l-5.6 2.4L45 38l-2.4-5.6L37 30l5.6-2.4z" fill="#151514"/></g></svg>`;
+const burst=`<svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#21444E" stroke-width="2.4" stroke-linecap="round"><path d="M45 6v10M45 44v10M17 30h10M63 30h10M25 12l7 7M58 41l7 7M65 12l-7 7M32 41l-7 7"/><path d="M45 22l2.4 5.6L53 30l-5.6 2.4L45 38l-2.4-5.6L37 30l5.6-2.4z" fill="#21444E"/></g></svg>`;
 function showModal(inner,onClose){
   modal.innerHTML=`<div class="card pop" role="dialog" aria-modal="true">${inner}</div>`; modal.hidden=false;
   const b=modal.querySelector("[data-close]"); if(b){b.focus();b.onclick=()=>{modal.hidden=true;onClose&&onClose()}}
@@ -330,8 +395,8 @@ function showModal(inner,onClose){
 modal.addEventListener("click",e=>{if(e.target===modal&&!modal.dataset.locked)modal.hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!modal.dataset.locked)modal.hidden=true;if(placing)stopPlacing()}});
 
-const flapSVG=()=>`<svg class="flap" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 50 18 100 0" fill="none" stroke="#151514" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
-  <svg class="seal" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2l4 4 5.6-.6.9 5.5 5 2.6-2 5.2 2 5.2-5 2.6-.9 5.5-5.6-.6-4 4-4-4-5.6.6-.9-5.5-5-2.6 2-5.2-2-5.2 5-2.6.9-5.5 5.6.6z" fill="#151514"/><path d="M23 12a8 8 0 1 0 6 12.5A6.5 6.5 0 0 1 23 12z" fill="none" stroke="#fff" stroke-width="2"/></svg>`;
+const flapSVG=()=>`<svg class="flap" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 50 18 100 0" fill="none" stroke="#21444E" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
+  <svg class="seal" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2l4 4 5.6-.6.9 5.5 5 2.6-2 5.2 2 5.2-5 2.6-.9 5.5-5.6-.6-4 4-4-4-5.6.6-.9-5.5-5-2.6 2-5.2-2-5.2 5-2.6.9-5.5 5.6.6z" fill="#21444E"/><path d="M23 12a8 8 0 1 0 6 12.5A6.5 6.5 0 0 1 23 12z" fill="none" stroke="#fff" stroke-width="2"/></svg>`;
 const spellCards=(id,cls="")=>{const list=spellsFor(id).slice(0,1);
   if(!list.length)return `<div class="envelope ${cls}"><p class="note">The Coven is still writing this spell. Check back soon!</p></div>`;
   return `<div class="spells">${list.map(sp=>`<div class="envelope ${cls}"><p class="note">${esc(sp.message)}</p><p class="note-from">love, ${esc(sp.from_name||COVEN)} ♡</p></div>`).join("")}</div>`};
@@ -339,7 +404,8 @@ const fromLine=id=>{const sp=spellsFor(id)[0];return (sp&&sp.from_name)||COVEN};
 const gmapsUrl=s=>`https://www.google.com/maps/search/?api=1&query=${s.mine?`${s.lat},${s.lng}`:encodeURIComponent(s.name+", "+(s.area||"")+", Sydney")}`;
 
 function spotForm({title,back,withArea,withSpell,fromName,onSave}){
-  const cats=Object.entries(CATS).filter(([k])=>withArea||k!=="ferry");
+  if(draft.cat)draft.cat=grp(draft.cat);
+  const cats=Object.entries(GROUPS);
   panel.innerHTML=`<button class="back" id="back">← ${esc(back)}</button>
     <h2 class="group" style="margin-top:4px">${esc(title)}</h2>
     <div class="stack" style="margin-top:6px">
@@ -349,20 +415,59 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave}){
       ${withArea?`<label for="stip">Good to know (address, hours, what to order)<textarea id="stip" maxlength="300" style="font-family:var(--hand);font-size:18px">${esc(draft.tip||"")}</textarea></label>`:""}
       <label for="snote">${withSpell?"Your spell for Theo (the note she unlocks there)":"A little note to yourself (optional)"}<textarea id="snote" maxlength="600" placeholder="${withSpell?"Dear Theo…":"Why it's magic…"}">${esc(draft.note||"")}</textarea></label>
       ${withSpell?`<label for="sfrom">Signed from<input type="text" id="sfrom" maxlength="40" value="${esc(draft.from||fromName||"")}"></label>`:""}
-      <div><div style="font-size:16px;margin-bottom:4px">Where is it?</div>
-        <div class="where"><button class="pill" id="tapmap">Tap the map to place it</button><span class="set">${draft.lat!=null?"Placed on the map ✓":"Not placed yet"}</span></div></div>
+      <div class="findbox"><div style="font-size:16px">Where is it?</div>
+        <label for="sfind" class="sub">Search for it
+          <div class="findrow"><input type="text" id="sfind" maxlength="120" value="${esc(draft.find||"")}" placeholder="e.g. Bourke Street Bakery Surry Hills"><button class="pill dark" id="sfindgo" type="button">Search</button></div></label>
+        <div class="results" id="sresults"></div>
+        <label for="slink" class="sub">…or paste a Google Maps link
+          <input type="text" id="slink" value="${esc(draft.link||"")}" placeholder="Paste the link here"></label>
+        <p class="hint">Can't find it? <a id="gmopen" href="#" target="_blank" rel="noopener">Look it up in Google Maps ↗</a>, then copy the link from the address bar.</p>
+        <div class="where"><button class="pill" id="tapmap" type="button">…or tap the map</button></div>
+        <p class="set" id="sset">${draft.lat!=null?`Placed on the map ✓${draft.placeLabel?` <span class="hint">(${esc(draft.placeLabel)})</span>`:""}`:"Not placed yet"}</p></div>
       <button class="big" id="savespot">Save</button>
       <p class="hint" id="formmsg"></p>
     </div>`;
   panel.scrollTop=0;
   const $=q=>panel.querySelector(q);
-  const keep=()=>{draft.name=$("#sname").value;draft.cat=$("#scat").value;draft.note=$("#snote").value;
+  const keep=()=>{draft.name=$("#sname").value;draft.cat=$("#scat").value;draft.note=$("#snote").value;draft.find=$("#sfind").value;draft.link=$("#slink").value;
     if(withArea){draft.area=$("#sarea").value;draft.tip=$("#stip").value} if(withSpell)draft.from=$("#sfrom").value};
   $("#back").onclick=()=>{clearDraft();stopPlacing();home()};
-  $("#tapmap").onclick=()=>{keep();startPlacing(()=>spotForm({title,back,withArea,withSpell,fromName,onSave}))};
+  $("#tapmap").onclick=()=>{keep();draft.placeLabel="";startPlacing(()=>spotForm({title,back,withArea,withSpell,fromName,onSave}))};
+
+  /* finding the spot: search, or a pasted Google Maps link */
+  const setMsg=t=>{$("#sset").innerHTML=t};
+  const putPin=(lat,lng,label)=>{const[x,y]=proj(lat,lng);
+    if(x<0||x>MW||y<0||y>MH){setMsg("Hmm, that's outside Theo's map. Try another search, or tap the map.");return false}
+    Object.assign(draft,{lat,lng,x,y,placeLabel:label||""});ghost.style.display="";render();flyToSpot({x,y});
+    setMsg(`Placed on the map ✓${label?` <span class="hint">(${esc(label)})</span>`:""}`);return true};
+  $("#gmopen").onclick=()=>{const q=($("#sfind").value||$("#sname").value).trim();
+    $("#gmopen").href=q?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+", Sydney")}`:"https://www.google.com/maps/@-33.87,151.21,12z"};
+  const [lon1,lat1]=[unproj(0,0).lng,unproj(0,0).lat], [lon2,lat2]=[unproj(MW,MH).lng,unproj(MW,MH).lat];
+  async function search(q){const box=$("#sresults"); q=q.trim(); if(!q){$("#sfind").focus();return}
+    box.innerHTML=`<p class="hint">Searching…</p>`;
+    try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=au&bounded=1&viewbox=${lon1},${lat1},${lon2},${lat2}&q=${encodeURIComponent(q)}`);
+      const list=r.ok?await r.json():[];
+      if(!list.length){box.innerHTML=`<p class="hint">Nothing found. Try adding the suburb, or paste a Google Maps link below.</p>`;return}
+      box.innerHTML=list.map((p,i)=>{const parts=p.display_name.split(", ");return `<button class="pick" type="button" data-i="${i}"><b>${esc(p.name||parts[0])}</b> <span class="hint">${esc(parts.slice(1,4).join(", "))}</span></button>`}).join("");
+      box.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{const p=list[+b.dataset.i];
+        if(!$("#sname").value.trim()&&p.name)$("#sname").value=p.name;
+        if(withArea&&!$("#sarea").value.trim()){const a=p.address||{};const sub=a.suburb||a.neighbourhood||a.city_district||"";if(sub)$("#sarea").value=sub}
+        if(putPin(+p.lat,+p.lon,p.name||p.display_name.split(", ")[0]))box.innerHTML=""});
+    }catch(e){box.innerHTML=`<p class="hint">Search isn't working right now. Paste a Google Maps link, or tap the map.</p>`}}
+  $("#sfindgo").onclick=()=>search($("#sfind").value);
+  $("#sfind").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();search($("#sfind").value)}};
+  function readLink(){const t=$("#slink").value.trim(); if(!t)return; let s=t; try{s=decodeURIComponent(t)}catch(e){}
+    const num="(-?\\d{1,3}\\.\\d+)";
+    const m=s.match(new RegExp(`!3d${num}!4d${num}`))||s.match(new RegExp(`[?&](?:q|query|ll|destination|center)=${num},\\s*${num}`))||s.match(new RegExp(`@${num},${num}`))||s.match(new RegExp(`^${num}[,\\s]+${num}$`));
+    const place=(s.match(/\/place\/([^/@?]+)/)||[])[1], name=place?place.replace(/\+/g," ").trim():"";
+    if(m){if(name&&!$("#sname").value.trim())$("#sname").value=name; putPin(+m[1],+m[2],name||"from your Google Maps link"); return}
+    if(/goo\.gl|g\.co\//.test(s)){setMsg("That's a short link, which the map can't read. Open it, then copy the long link from the address bar. Or search for the place above.");return}
+    if(name){$("#sfind").value=name;search(name);return}
+    setMsg("Hmm, I can't find a location in that link. Try searching for the place instead.")}
+  $("#slink").onchange=readLink; $("#slink").onpaste=()=>setTimeout(readLink,0);
   $("#savespot").onclick=async()=>{keep();
     if(!draft.name.trim()){$("#formmsg").textContent="Give the spot a name first.";$("#sname").focus();return}
-    if(draft.lat==null){$("#formmsg").textContent="Pop it on the map first: tap “Tap the map to place it”.";return}
+    if(draft.lat==null){$("#formmsg").textContent="Pop it on the map first: search for it, paste a Google Maps link, or tap the map.";return}
     $("#savespot").disabled=true; $("#formmsg").textContent="Saving…";
     const ok=await onSave(draft); if(!ok){$("#savespot").disabled=false;$("#formmsg").textContent="That didn't save. Check your internet and try again."}
   };
@@ -394,9 +499,9 @@ function home(){
         <ol>${st.map((i,n)=>`<li><span class="dot${isOpen(i)?" open":""}">${isDone(i)?"✓":n+1}</span>${esc(byId[i].name)}</li>`).join("")}</ol></button>`;
     });
   } else if(tab==="spots"){
-    const cats=[...new Set(spots.map(s=>s.cat))];
-    h+=`<div class="chips">${cats.map(c=>`<button class="chip" data-cat="${c}" aria-pressed="${filter===c}">${iconSVG(c)}${(CATS[c]||CATS.heart)[0]}</button>`).join("")}</div>`;
-    h+=groupedRows(s=>!filter||s.cat===filter, s=>isDone(s.id)?"complete ✓":isOpen(s.id)?"unlocked":"sealed");
+    const have=new Set(spots.map(s=>grp(s.cat))), cats=Object.keys(GROUPS).filter(c=>have.has(c));
+    h+=`<div class="chips">${cats.map(c=>`<button class="chip" data-cat="${c}" aria-pressed="${filter===c}">${iconSVG(c)}${GROUPS[c][0]}</button>`).join("")}</div>`;
+    h+=groupedRows(s=>!filter||grp(s.cat)===filter,s=>isDone(s.id)?"complete ✓":isOpen(s.id)?"unlocked":"sealed");
   } else {
     h+=`<p class="lede">Found somewhere magic? Add it to your map${online?" and the Coven will see it too":""}.</p>
       <div class="rowbtns"><button class="pill dark" id="addspot">${smallIcon("i-heart")}Add my own spot</button></div>`;
@@ -426,7 +531,7 @@ function groupedRows(pred,statusOf){
 function wireCommon(){
   panel.querySelectorAll("[data-quest]").forEach(b=>b.onclick=()=>{const id=b.dataset.quest;selectQuest(quest&&quest.id===id?null:id);if(!quest)showAll();home()});
   panel.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{filter=filter===b.dataset.cat?null:b.dataset.cat;refreshPins();home();
-    if(filter)flyTo(fitPoints(spots.filter(s=>s.cat===filter).map(s=>proj(s.lat,s.lng)),50))});
+    if(filter)flyTo(fitPoints(spots.filter(s=>grp(s.cat)===filter).map(s=>proj(s.lat,s.lng)),50))});
   panel.querySelectorAll("[data-spot]").forEach(b=>b.onclick=()=>onPin(b.dataset.spot,true));
   wireCopy(panel);
 }
@@ -688,7 +793,7 @@ function questForm(f){
 /* ---------- the secret word ---------- */
 function askCode(msg){
   modal.innerHTML=`<div class="card pop" role="dialog" aria-modal="true" aria-labelledby="lockt">
-    <svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#151514" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M50 8a20 20 0 1 0 16 32A16 16 0 0 1 50 8z"/><path d="M68 10l1.6 4.4 4.4 1.6-4.4 1.6L68 22l-1.6-4.4-4.4-1.6 4.4-1.6zM22 14l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/></g></svg>
+    <svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#21444E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M50 8a20 20 0 1 0 16 32A16 16 0 0 1 50 8z"/><path d="M68 10l1.6 4.4 4.4 1.6-4.4 1.6L68 22l-1.6-4.4-4.4-1.6 4.4-1.6zM22 14l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/></g></svg>
     <h2 id="lockt">Speak the secret word</h2>
     <p style="text-align:center;margin:0 0 14px">This map is sealed by the Coven. Only Theo knows the word.</p>
     <form id="codef" class="stack" style="margin-top:0">

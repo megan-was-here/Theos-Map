@@ -2,9 +2,9 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Coven Spellbook</title>
-<meta name="theme-color" content="#fcfcfa">
+<meta name="theme-color" content="#21444E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Doodle+Shadow&family=Patrick+Hand&family=Gochi+Hand&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Kalam:wght@400;700&family=Gochi+Hand&display=swap">
 <link rel="stylesheet" href="app.css">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 </head><body data-mode="coven">
@@ -19,13 +19,17 @@
     <svg id="map" role="img" aria-label="Hand-drawn map of Sydney with Theo's quest spots">
       <defs>
         <pattern id="waves" width="30" height="22" patternUnits="userSpaceOnUse">
-          <path d="M3 7q3-3.5 6 0t6 0M18 18q3-3.5 6 0t6 0" fill="none" stroke="#151514" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+          <path d="M3 7q3-3.5 6 0t6 0M18 18q3-3.5 6 0t6 0" fill="none" stroke="#97D3C9" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
         </pattern>
         <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="6" height="6" fill="#fcfcfa"/><line x1="0" y1="0" x2="0" y2="6" stroke="#151514" stroke-width="1.4" opacity=".55"/>
+          <rect width="6" height="6" fill="#F3EFD9"/><line x1="0" y1="0" x2="0" y2="6" stroke="#21444E" stroke-width="1.4" opacity=".55"/>
         </pattern>
-        <symbol id="i-cafe" viewBox="0 0 24 24"><path class="ico" d="M4 9.5h12v4.5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10.5h1.8a2.6 2.6 0 0 1 0 5.2H16M8 3.5c-1.2 1.4 1.1 2.2 0 4M12 3.5c-1.2 1.4 1.1 2.2 0 4"/></symbol>
-        <symbol id="i-bar" viewBox="0 0 24 24"><path class="ico" d="M4 4.5h16L12 13zM12 13v7M8 20.5h8M18 2.5l-4.5 5"/><circle class="ico" cx="14.6" cy="6.6" r="1.4"/></symbol>
+        <symbol id="i-out" viewBox="0 0 24 24"><circle class="ico" cx="12" cy="12" r="4.2"/><path class="ico" d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+        <symbol id="i-move" viewBox="0 0 24 24"><path class="ico" d="M3.5 9.5v5M6.5 6.5v11M17.5 6.5v11M20.5 9.5v5M6.5 12h11"/></symbol>
+        <symbol id="i-shop" viewBox="0 0 24 24"><path class="ico" d="M5 8.5h14l-1.2 12H6.2zM9 11V7a3 3 0 0 1 6 0v4"/></symbol>
+        <symbol id="i-fun" viewBox="0 0 24 24"><path class="ico" d="M3 7h18v3.3a1.7 1.7 0 0 0 0 3.4V17H3v-3.3a1.7 1.7 0 0 0 0-3.4zM15 7.5v1.6M15 11.2v1.6M15 14.9v1.6"/></symbol>
+        <symbol id="i-cafe" viewBox="0 0 24 24"><path class="ico" d="M4.5 9.5h11.5v4.5a5 5 0 0 1-5 5H9.5a5 5 0 0 1-5-5zM16 10.5h1.6a2.6 2.6 0 0 1 0 5.2H16M8.5 3.5c-1.1 1.3 1.1 2.1 0 3.6M12.5 3.5c-1.1 1.3 1.1 2.1 0 3.6"/></symbol>
+        <symbol id="i-bar" viewBox="0 0 24 24"><path class="ico" d="M4 4.5h16L12 13zM12 13v7M8 20.5h8M16.5 2.5 13.5 7"/></symbol>
         <symbol id="i-swim" viewBox="0 0 24 24"><path class="ico" d="M2.5 8c2.4-2 4.6-2 7 0s4.6 2 7 0 4.4-2 5 0M2.5 13c2.4-2 4.6-2 7 0s4.6 2 7 0 4.4-2 5 0M2.5 18c2.4-2 4.6-2 7 0s4.6 2 7 0 4.4-2 5 0"/></symbol>
         <symbol id="i-yoga" viewBox="0 0 24 24"><path class="ico" d="M12 4.5c-2.6 3-2.6 7 0 10.5 2.6-3.5 2.6-7.5 0-10.5zM12 15c-3.4-.4-6.4-2.6-7.5-6.2 3.2.1 6.2 2.3 7.5 6.2zM12 15c3.4-.4 6.4-2.6 7.5-6.2-3.2.1-6.2 2.3-7.5 6.2zM4 19h16"/></symbol>
         <symbol id="i-massage" viewBox="0 0 24 24"><ellipse class="ico" cx="12" cy="18" rx="7.5" ry="2.6"/><ellipse class="ico" cx="12" cy="12.6" rx="5.4" ry="2.3"/><ellipse class="ico" cx="12" cy="7.8" rx="3.4" ry="1.9"/><path class="ico" d="M17 3.5c2.5.2 3.5 1.6 3.5 3.5-2.4 0-3.6-1.4-3.5-3.5z"/></symbol>
@@ -40,8 +44,8 @@
         <symbol id="i-ferry" viewBox="0 0 24 24"><path class="ico" d="M3 14.5 5 18h14l2-3.5zM6 14.5V10h12v4.5M9 10V7h6v3M2.5 21c2 1 3.5 1 5 0s3-1 5 0 3.5 1 5 0 3-1 4 0"/></symbol>
         <symbol id="i-heart" viewBox="0 0 24 24"><path class="ico" d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.2 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></symbol>
         <symbol id="i-moon" viewBox="0 0 24 24"><path class="ico" d="M15 3.5a8.5 8.5 0 1 0 6 13.5A7 7 0 0 1 15 3.5z"/><path class="ico" d="M19.5 3.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
-        <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7.5 11V8.2a4.5 4.5 0 0 1 9 0V11" fill="none" stroke="#151514" stroke-width="2.4" stroke-linecap="round"/><rect x="5" y="11" width="14" height="10" rx="2.2" fill="#fcfcfa" stroke="#151514" stroke-width="2.4"/><circle cx="12" cy="15.4" r="1.4" fill="#151514"/><path d="M12 16.4v2" stroke="#151514" stroke-width="1.8" stroke-linecap="round"/></symbol>
-        <symbol id="i-tick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fcfcfa" stroke="#151514" stroke-width="2.4"/><path d="M7.5 12.5l3 3 6-7" fill="none" stroke="#151514" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-lock" viewBox="0 0 24 24"><path d="M7.5 11V8.2a4.5 4.5 0 0 1 9 0V11" fill="none" stroke="#21444E" stroke-width="2.4" stroke-linecap="round"/><rect x="5" y="11" width="14" height="10" rx="2.2" fill="#F3EFD9" stroke="#21444E" stroke-width="2.4"/><circle cx="12" cy="15.4" r="1.4" fill="#21444E"/><path d="M12 16.4v2" stroke="#21444E" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="i-tick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F3EFD9" stroke="#21444E" stroke-width="2.4"/><path d="M7.5 12.5l3 3 6-7" fill="none" stroke="#21444E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
         <symbol id="i-chat" viewBox="0 0 24 24"><path class="ico" d="M4 5h16v11H10l-5 4v-4H4z"/><path class="ico" d="M8 9.5h8M8 12.5h5"/></symbol>
       </defs>
       <g id="world"></g>
@@ -49,9 +53,9 @@
     <div class="mapbtns">
       <button id="zin" aria-label="Zoom in">+</button>
       <button id="zout" aria-label="Zoom out">&minus;</button>
-      <button id="zall" aria-label="Show all of Sydney"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="#151514" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      <button id="zall" aria-label="Show all of Sydney"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="#21444E" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     </div>
-    <svg class="compass" viewBox="0 0 60 60" aria-hidden="true"><g fill="none" stroke="#151514" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="32" r="17" fill="#fcfcfa"/><circle cx="30" cy="32" r="13" stroke-dasharray="1.5 3"/><path d="M30 11l5 21-5 21-5-21z" fill="#fcfcfa"/><path d="M30 11l5 21h-10z" fill="#151514"/><path d="M9 32l21-4 21 4-21 4z"/></g><text x="30" y="9" text-anchor="middle" font-family="Gochi Hand, cursive" font-size="11" fill="#151514">N</text></svg>
+    <svg class="compass" viewBox="0 0 60 60" aria-hidden="true"><g fill="none" stroke="#21444E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="32" r="17" fill="#F3EFD9"/><circle cx="30" cy="32" r="13" stroke-dasharray="1.5 3"/><path d="M30 11l5 21-5 21-5-21z" fill="#F3EFD9"/><path d="M30 11l5 21h-10z" fill="#21444E"/><path d="M9 32l21-4 21 4-21 4z"/></g><text x="30" y="9" text-anchor="middle" font-family="Gochi Hand, cursive" font-size="11" fill="#21444E">N</text></svg>
     <div class="scalebar" id="scalebar" aria-hidden="true"></div>
     <div class="placebar" id="placebar" hidden>Tap the map where your spot is <button id="placecancel">Cancel</button></div>
     <div class="status" id="status"></div>

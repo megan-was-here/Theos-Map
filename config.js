@@ -4,7 +4,8 @@ window.THEO_CONFIG = {
   supabaseUrl: "https://valtzkoovhajgouojerj.supabase.co",
   supabaseKey: "sb_publishable_FoCWdi4djBxPsvbc251RfA_ahJjRylG",
 
-  // Paste the Coven group's WhatsApp invite link here, e.g. "https://chat.whatsapp.com/AbC123..."
+  // Leave empty: the WhatsApp invite link is kept in Supabase behind the secret word
+  // (see setup/whatsapp-link.sql), so it isn't visible in these public files.
   whatsapp: "",
 
   covenName: "The Coven & Co.",
