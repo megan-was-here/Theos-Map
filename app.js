@@ -495,6 +495,52 @@ function spotForm({title,back,withArea,withSpell,fromName,onSave,onBack,noNote,s
 let confirming=false, completing=false;
 const newCount=()=>spots.filter(s=>isNew(s.id)).length+quests.filter(q=>isNew("q:"+q.id)).length;
 
+/* ---------- notifications ("new magic" buzz on Theo's phone) ---------- */
+const PUSH_KEY=CFG.pushKey||"";
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+function pushState(){
+  if(!PUSH_KEY||!sb||MODE!=="theo")return "off";
+  if(isIOS&&!standalone())return "install";
+  if(!pushSupported())return "off";
+  return Notification.permission;            // "default", "granted" or "denied"
+}
+const keyBytes=k=>{const b=atob(k.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((k.length+3)%4));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+async function savePush(reg){
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(PUSH_KEY)});
+  const {error}=await sb.rpc("theo_save_push",{p_code:theoCode,p_sub:sub.toJSON()});
+  if(error)throw error;
+}
+async function turnOnPush(){
+  let perm;
+  try{perm=await Notification.requestPermission()}catch(e){perm="denied"}
+  if(perm!=="granted"){home();return}
+  try{const reg=await navigator.serviceWorker.register("sw.js"); await navigator.serviceWorker.ready; await savePush(reg);
+    store.set("pushon",true); toast("Notifications on ✦ We'll let you know when new magic appears.")}
+  catch(e){console.warn(e); toast("Couldn't turn notifications on. Check your internet and try again.")}
+  home();
+}
+async function refreshPush(){   // keep her phone's details fresh each time she opens the map
+  if(pushState()!=="granted")return;
+  try{const reg=await navigator.serviceWorker.register("sw.js"); await navigator.serviceWorker.ready; await savePush(reg); store.set("pushon",true)}catch(e){console.warn(e)}
+}
+function pushCard(){
+  const st=pushState(); if(st==="off"||store.get("pushhide",false))return "";
+  if(st==="granted"&&store.get("pushon",false))return "";
+  if(st==="install")return `<div class="reply pushcard"><h3>Want a buzz when new magic appears?</h3>
+    <p style="margin:0">Tap the Share button <b>⬆</b> at the bottom of Safari, then <b>Add to Home Screen</b>. Open Theo's Sydney from your Home Screen and you'll see a button here to turn notifications on.</p>
+    <div class="rowbtns"><button class="pill" id="pushno">Not now</button></div></div>`;
+  if(st==="denied")return `<div class="reply pushcard"><h3>Notifications are off</h3>
+    <p style="margin:0">To get a buzz when the Coven adds new magic: open your phone's <b>Settings → Notifications → Theo's Sydney</b> and switch on Allow Notifications.</p>
+    <div class="rowbtns"><button class="pill" id="pushno">Got it</button></div></div>`;
+  return `<div class="reply pushcard"><h3>Want a buzz when new magic appears?</h3>
+    <p style="margin:0">We'll send you a little notification whenever the Coven adds a new spot or quest.</p>
+    <div class="rowbtns"><button class="pill dark" id="pushyes">Turn on notifications</button><button class="pill" id="pushno">Not now</button></div></div>`;
+}
+if(MODE==="theo"&&PUSH_KEY&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+
 function home(){
   if(MODE==="coven")return covenHome();
   current=null; confirming=false; completing=false; clearDraft(); refreshPins();
@@ -505,7 +551,7 @@ function home(){
     <button class="tab" role="tab" id="t-mine" aria-selected="${tab==="mine"}">My spots</button></div>`;
   if(tab==="quests"){
     h+=`<p class="lede">The Coven has set you ${quests.length} quests. Every stop holds a sealed spell. Break the seal when you get there.</p>
-      <div class="rowbtns">${covenLink("Hi Coven! ","Message the Coven","pill")}</div>`;
+      <div class="rowbtns">${covenLink("Hi Coven! ","Message the Coven","pill")}</div>${pushCard()}`;
     quests.forEach((q,qi)=>{
       const st=questStops(q); const dn=st.filter(isDone).length, op=st.filter(isOpen).length;
       h+=`<button class="trail${quest&&quest.id===q.id?" on":""}" data-quest="${esc(q.id)}" aria-pressed="${!!(quest&&quest.id===q.id)}">
@@ -525,6 +571,9 @@ function home(){
     else h+=mine.map(s=>`<button class="spotrow" data-spot="${esc(s.id)}">${iconSVG(s.cat)}<span class="nm">${esc(s.name)}<small>${(CATS[s.cat]||CATS.heart)[0]}</small></span><span class="st">yours ♡</span></button>`).join("");
   }
   panel.innerHTML=h; panel.scrollTop=0;
+  const py=panel.querySelector("#pushyes"), pn=panel.querySelector("#pushno");
+  if(py)py.onclick=()=>{py.disabled=true;py.textContent="One moment…";turnOnPush()};
+  if(pn)pn.onclick=()=>{store.set("pushhide",true);home()};
   panel.querySelector("#t-quests").onclick=()=>{tab="quests";filter=null;home()};
   panel.querySelector("#t-spots").onclick=()=>{tab="spots";home()};
   panel.querySelector("#t-mine").onclick=()=>{tab="mine";filter=null;selectQuest(null);home();if(mine.length)flyTo(fitPoints(mine.map(s=>proj(s.lat,s.lng)),60))};
@@ -850,7 +899,7 @@ async function openBook(fromForm){
   store.set("code",theoCode);
   delete modal.dataset.locked; modal.hidden=true;
   rebuildIndex(); initSeen(); drawPins();
-  view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render(); home();
+  view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render(); home(); refreshPush();
   if(firstVisit||!store.get("intro",false)){intro();store.set("intro",true)} else announceNew();
 }
 

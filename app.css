@@ -216,3 +216,4 @@ textarea{min-height:92px;resize:vertical;font-family:var(--note);font-size:20px}
 #map[data-zoom="1"] .landmark{opacity:.9}
 .compass{position:absolute;left:max(8px,env(safe-area-inset-left,0px));top:8px;width:54px;height:54px;pointer-events:none}
 .scalebar{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:12px;display:flex;align-items:flex-end;gap:6px;font-size:14px;line-height:1;pointer-events:none;background:var(--paper);padding:3px 6px;border-radius:8px}
+.pushcard{margin-top:12px}

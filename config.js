@@ -8,6 +8,9 @@ window.THEO_CONFIG = {
   // (see setup/whatsapp-link.sql), so it isn't visible in these public files.
   whatsapp: "",
 
+  // Public half of the notification key (safe to share; the private half lives only in Supabase)
+  pushKey: "BCfgQnU-pNiXmZ9pXqLx7BwWdfywTWywCL3-92zftJRhYxCqVz0mgBryP08NajrXZdZGrGqFDNFGQl6N7zRDG0g",
+
   covenName: "The Coven & Co.",
 
   // The welcome letter Theo sees the first time she opens the map
