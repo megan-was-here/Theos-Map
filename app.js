@@ -9,9 +9,8 @@
 const CFG = window.THEO_CONFIG || {};
 const MODE = document.body.dataset.mode || "theo";
 const MAP = window.THEO_MAPDATA;
-const FALLBACK = window.THEO_FALLBACK;
 const COVEN = CFG.covenName || "The Coven & Co.";
-const INTRO = CFG.intro || FALLBACK.intro;
+const INTRO = CFG.intro || "";
 const WHATSAPP = CFG.whatsapp || "";
 let sb = null;
 if (CFG.supabaseUrl && CFG.supabaseKey && window.supabase) {
@@ -59,49 +58,43 @@ function toast(t){toastEl.textContent=t;toastEl.hidden=false;clearTimeout(toastT
 let spots=[], spells=[], quests=[], progress={}, mine=[];
 let online=false;   // true when data came from Supabase
 
+let theoCode=store.get("code","");
+class WrongCode extends Error{}
 async function loadAll(){
-  if(sb){
-    try{
-      const [a,b,c,d,e]=await Promise.all([
-        sb.from("spots").select("*").order("created_at"),
-        sb.from("spells").select("*").order("created_at"),
-        sb.from("quests").select("*").order("created_at"),
-        sb.from("progress").select("*"),
-        sb.from("theo_spots").select("*").order("created_at")
-      ]);
-      const err=[a,b,c,d,e].find(r=>r.error); if(err)throw err.error;
-      spots=a.data; spells=b.data; quests=c.data;
-      progress=Object.fromEntries(d.data.map(p=>[p.spot_id,p])); mine=e.data;
-      online=true; return;
-    }catch(err){ console.warn("Supabase load failed",err); if(MODE==="coven")throw err; toast("Couldn't reach the Coven's spellbook, showing the saved copy."); }
+  if(!sb) throw new Error("not set up");
+  if(MODE==="theo"){
+    const {data,error}=await sb.rpc("theo_load",{p_code:theoCode});
+    if(error){ if(/wrong code/i.test(error.message||"")) throw new WrongCode(); throw error; }
+    spots=data.spots; spells=data.spells; quests=data.quests;
+    progress=Object.fromEntries(data.progress.map(p=>[p.spot_id,p])); mine=data.mine;
+    online=true; return;
   }
-  spots=FALLBACK.spots.map(s=>({...s}));
-  spells=FALLBACK.spells.map((s,i)=>({id:"f"+i,...s}));
-  quests=FALLBACK.quests.map(q=>({...q}));
-  progress=store.get("progress",{}); mine=store.get("mine",[]);
-  online=false;
+  const [a,b,c,d,e]=await Promise.all([
+    sb.from("spots").select("*").order("created_at"),
+    sb.from("spells").select("*").order("created_at"),
+    sb.from("quests").select("*").order("created_at"),
+    sb.from("progress").select("*"),
+    sb.from("theo_spots").select("*").order("created_at")
+  ]);
+  const err=[a,b,c,d,e].find(r=>r.error); if(err)throw err.error;
+  spots=a.data; spells=b.data; quests=c.data;
+  progress=Object.fromEntries(d.data.map(p=>[p.spot_id,p])); mine=e.data;
+  online=true;
 }
-function saveLocal(){store.set("progress",progress);store.set("mine",mine)}
 
 async function setProgress(spot_id,patch){
   progress[spot_id]={...(progress[spot_id]||{spot_id}),...patch};
-  saveLocal();
-  if(online){
-    const {error}=await sb.from("progress").upsert({spot_id,...patch,updated_at:new Date().toISOString()},{onConflict:"spot_id"});
-    if(error){console.warn(error);toast("Saved on this phone, but couldn't reach the Coven. Check your internet.")}
-  }
+  const {error}=await sb.rpc("theo_save_progress",{p_code:theoCode,p_spot:spot_id,p_patch:patch});
+  if(error){console.warn(error);toast("That didn't save. Check your internet and try again.")}
 }
 async function addMine(s){
-  if(online){
-    const {data,error}=await sb.from("theo_spots").insert({name:s.name,cat:s.cat,note:s.note,lat:s.lat,lng:s.lng}).select().single();
-    if(error){console.warn(error);toast("Couldn't save that spot. Check your internet and try again.");return null}
-    mine.push(data); saveLocal(); return data;
-  }
-  const row={id:"mine-"+Date.now(),...s,created_at:new Date().toISOString()}; mine.push(row); saveLocal(); return row;
+  const {data,error}=await sb.rpc("theo_add_spot",{p_code:theoCode,p_name:s.name,p_cat:s.cat,p_note:s.note,p_lat:s.lat,p_lng:s.lng});
+  if(error){console.warn(error);toast("Couldn't save that spot. Check your internet and try again.");return null}
+  mine.push(data); return data;
 }
 async function delMine(id){
-  if(online){const {error}=await sb.from("theo_spots").delete().eq("id",id); if(error){toast("Couldn't remove it. Try again.");return false}}
-  mine=mine.filter(m=>m.id!==id); saveLocal(); return true;
+  const {error}=await sb.rpc("theo_del_spot",{p_code:theoCode,p_id:id}); if(error){toast("Couldn't remove it. Try again.");return false}
+  mine=mine.filter(m=>m.id!==id); return true;
 }
 
 /* derived */
@@ -288,8 +281,8 @@ function showModal(inner,onClose){
   const b=modal.querySelector("[data-close]"); if(b){b.focus();b.onclick=()=>{modal.hidden=true;onClose&&onClose()}}
   wireCopy(modal);
 }
-modal.addEventListener("click",e=>{if(e.target===modal)modal.hidden=true});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){modal.hidden=true;if(placing)stopPlacing()}});
+modal.addEventListener("click",e=>{if(e.target===modal&&!modal.dataset.locked)modal.hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!modal.dataset.locked)modal.hidden=true;if(placing)stopPlacing()}});
 
 const flapSVG=()=>`<svg class="flap" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0 50 18 100 0" fill="none" stroke="#151514" stroke-width="2.4" vector-effect="non-scaling-stroke"/></svg>
   <svg class="seal" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2l4 4 5.6-.6.9 5.5 5 2.6-2 5.2 2 5.2-5 2.6-.9 5.5-5.6-.6-4 4-4-4-5.6.6-.9-5.5-5-2.6 2-5.2-2-5.2 5-2.6.9-5.5 5.6.6z" fill="#151514"/><path d="M23 12a8 8 0 1 0 6 12.5A6.5 6.5 0 0 1 23 12z" fill="none" stroke="#fff" stroke-width="2"/></svg>`;
@@ -655,15 +648,47 @@ function questForm(f){
     quest=null; await reloadCoven(); tab="quests"; selectQuest(id); covenHome(); toast("New quest made! Theo will see it next time she opens her map.")};
 }
 
+/* ---------- the secret word ---------- */
+function askCode(msg){
+  modal.innerHTML=`<div class="card pop" role="dialog" aria-modal="true" aria-labelledby="lockt">
+    <svg class="burst" viewBox="0 0 90 60" aria-hidden="true"><g fill="none" stroke="#151514" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M50 8a20 20 0 1 0 16 32A16 16 0 0 1 50 8z"/><path d="M68 10l1.6 4.4 4.4 1.6-4.4 1.6L68 22l-1.6-4.4-4.4-1.6 4.4-1.6zM22 14l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/></g></svg>
+    <h2 id="lockt">Speak the secret word</h2>
+    <p style="text-align:center;margin:0 0 14px">This map is sealed by the Coven. Only Theo knows the word.</p>
+    <form id="codef" class="stack" style="margin-top:0">
+      <label for="codein" style="text-align:center">Secret word<input type="password" id="codein" autocomplete="off" autocapitalize="off" spellcheck="false" style="text-align:center;font-size:24px;letter-spacing:4px"></label>
+      <button class="big" type="submit">Break the seal</button>
+      <p class="hint" id="codemsg" style="text-align:center">${esc(msg||"")}</p>
+    </form></div>`;
+  modal.hidden=false; modal.dataset.locked="1";
+  const inp=modal.querySelector("#codein"); setTimeout(()=>inp.focus(),50);
+  modal.querySelector("#codef").addEventListener("submit",e=>{e.preventDefault();
+    const v=inp.value.trim(); if(!v){modal.querySelector("#codemsg").textContent="Type the secret word first.";return}
+    theoCode=v; modal.querySelector("#codemsg").textContent="Checking…"; openBook(true);
+  });
+}
+async function openBook(fromForm){
+  try{ await loadAll(); }
+  catch(err){
+    if(err instanceof WrongCode){ theoCode=""; store.set("code",""); return askCode(fromForm?"That's not it. Try again!":"The secret word has changed. Ask the Coven for the new one."); }
+    console.warn(err);
+    if(fromForm){ const m=modal.querySelector("#codemsg"); if(m)m.textContent="Can't reach the spellbook. Check your internet and try again."; return; }
+    panel.innerHTML=`<div class="empty">Can't reach the spellbook right now. Check your internet, then <button class="linkbtn" id="retry">try again</button>.</div>`;
+    panel.querySelector("#retry").onclick=()=>openBook(); return;
+  }
+  store.set("code",theoCode);
+  delete modal.dataset.locked; modal.hidden=true;
+  rebuildIndex(); initSeen(); drawPins();
+  view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render(); home();
+  if(firstVisit||!store.get("intro",false)){intro();store.set("intro",true)} else announceNew();
+}
+
 /* ======================================================================
    START
    ====================================================================== */
 (async function start(){
   rebuildIndex(); drawPins(); render(); view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render();
   if(MODE==="coven"){panel.innerHTML=`<div class="loading">Opening the spellbook…</div>`;return covenBoot()}
-  panel.innerHTML=`<div class="loading">Opening the spellbook…</div>`;
-  await loadAll(); rebuildIndex(); initSeen(); drawPins();
-  view=fitPoints(ALL.map(s=>[s.x,s.y]),36); clampView(view); render(); home();
-  if(firstVisit||!store.get("intro",false)){intro();store.set("intro",true)} else announceNew();
+  panel.innerHTML=`<div class="loading">The spellbook is sealed…</div>`;
+  if(theoCode) openBook(); else askCode();
 })();
 })();
